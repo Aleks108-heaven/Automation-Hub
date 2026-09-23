@@ -1,0 +1,232 @@
+<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Automation Hub — Components</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>:root,[data-theme=light]{--surface-000:#ffffff;--surface-100:#f5f4ef;--surface-200:#ebe9e1;--line:#d9d6cb;--line-strong:#86826f;--ink:#1b1d21;--ink-muted:#55585f;--brand:#1d5c4f;--brand-strong:#133f36;--brand-soft:#dcebe5;--on-brand:#ffffff;--accent:#d9a21b;--accent-ink:#7a5600;--accent-soft:#f6ecce;--pass:#0b6a78;--pass-soft:#d7eef1;--fail:#b3410e;--fail-soft:#f8e2d6;--flaky:#7d5a00;--flaky-soft:#f3ead0;--skip:#5d6068;--code-bg:#1b1d21;--code-ink:#e9e6de;--code-muted:#9ba1aa;--code-key:#83d3c3;--code-str:#f0c36a;}[data-theme=dark]{--surface-000:#1f2227;--surface-100:#15171b;--surface-200:#262a30;--line:#343840;--line-strong:#7a808b;--ink:#ece9e1;--ink-muted:#a9acb3;--brand:#7cc6b0;--brand-strong:#a6dccb;--brand-soft:#1d3831;--on-brand:#0e1a17;--accent:#e3b544;--accent-ink:#e3b544;--accent-soft:#352d15;--pass:#6cc5d1;--pass-soft:#15343a;--fail:#f2905f;--fail-soft:#3b2118;--flaky:#e7c15a;--flaky-soft:#342c12;--skip:#a2a6ae;--code-bg:#0d0f12;--code-ink:#e9e6de;--code-muted:#9ba1aa;--code-key:#83d3c3;--code-str:#f0c36a;}:root{--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-12:48px;--radius-sm:4px;--radius-md:8px;--radius-lg:14px;--radius-pill:999px;--font-sans:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;--font-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;}/* Automation Hub — component styles. Requires tokens.css. Classes are prefixed ah- */
+.ah-root{font-family:var(--font-sans);color:var(--ink);background:var(--surface-100);font-size:16px;line-height:26px}
+.ah-row{display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center}
+.ah-label{font-size:12px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted)}
+
+/* Button */
+.ah-btn{display:inline-flex;align-items:center;gap:var(--space-2);font:600 14px/20px var(--font-sans);padding:var(--space-2) var(--space-4);min-height:40px;border-radius:var(--radius-md);border:1px solid transparent;cursor:pointer;text-decoration:none}
+.ah-btn--primary{background:var(--brand);color:var(--on-brand)}
+.ah-btn--primary:hover{background:var(--brand-strong)}
+.ah-btn--secondary{background:var(--surface-000);color:var(--ink);border-color:var(--line-strong)}
+.ah-btn--secondary:hover{background:var(--surface-200)}
+.ah-btn--ghost{background:transparent;color:var(--brand)}
+.ah-btn--ghost:hover{background:var(--brand-soft)}
+.ah-btn:focus-visible,.ah-card:focus-visible,.ah-check input:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.ah-btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* Status badge — color + word + glyph, never color alone */
+.ah-badge{display:inline-flex;align-items:center;gap:var(--space-1);font:600 12px/16px var(--font-mono);letter-spacing:.02em;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:var(--surface-200);color:var(--ink-muted)}
+.ah-badge--pass{background:var(--pass-soft);color:var(--pass)}
+.ah-badge--fail{background:var(--fail-soft);color:var(--fail)}
+.ah-badge--flaky{background:var(--flaky-soft);color:var(--flaky)}
+.ah-badge--skip{background:var(--surface-200);color:var(--skip)}
+.ah-badge--brand{background:var(--brand-soft);color:var(--brand)}
+
+/* Topic card */
+.ah-card{display:flex;flex-direction:column;gap:var(--space-2);background:var(--surface-000);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--space-6);color:inherit;text-decoration:none;transition:box-shadow .15s,border-color .15s}
+a.ah-card:hover,button.ah-card:hover{box-shadow:var(--shadow-raised);border-color:var(--line-strong)}
+.ah-card__eyebrow{font:600 12px/16px var(--font-mono);letter-spacing:.04em;color:var(--ink-muted)}
+.ah-card__title{font-size:18px;line-height:24px;font-weight:600;margin:0}
+.ah-card__body{font-size:14px;line-height:22px;color:var(--ink-muted);margin:0}
+.ah-card__foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:var(--space-2)}
+
+/* Callout — tinted ground + labelled chip; no side stripe */
+.ah-callout{border-radius:var(--radius-md);padding:var(--space-4);background:var(--surface-200);font-size:14px;line-height:22px}
+.ah-callout__label{display:inline-block;font:600 12px/16px var(--font-mono);letter-spacing:.04em;text-transform:uppercase;margin-bottom:var(--space-1)}
+.ah-callout p{margin:0}
+.ah-callout--tip{background:var(--accent-soft)} .ah-callout--tip .ah-callout__label{color:var(--accent-ink)}
+.ah-callout--risk{background:var(--fail-soft)} .ah-callout--risk .ah-callout__label{color:var(--fail)}
+.ah-callout--note{background:var(--brand-soft)} .ah-callout--note .ah-callout__label{color:var(--brand)}
+
+/* Code block / terminal */
+.ah-code{background:var(--code-bg);color:var(--code-ink);font:400 14px/22px var(--font-mono);border-radius:var(--radius-md);padding:var(--space-4);overflow-x:auto;margin:0;white-space:pre}
+.ah-code .c{color:var(--code-muted)} .ah-code .k{color:var(--code-key)} .ah-code .s{color:var(--code-str)}
+.ah-inline-code{font:400 .875em/1 var(--font-mono);background:var(--surface-200);padding:2px 5px;border-radius:var(--radius-sm)}
+
+/* Checklist */
+.ah-checklist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--space-1)}
+.ah-check{display:flex;gap:var(--space-3);align-items:flex-start;padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);cursor:pointer;font-size:14px;line-height:22px}
+.ah-check:hover{background:var(--surface-200)}
+.ah-check input{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;margin:2px 0 0;border:1.5px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--surface-000);display:grid;place-content:center;cursor:pointer}
+.ah-check input:checked{background:var(--brand);border-color:var(--brand)}
+.ah-check input:checked::after{content:"";width:9px;height:5px;border:2px solid var(--on-brand);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+.ah-check input:checked + span{color:var(--ink-muted);text-decoration:line-through}
+
+/* Progress */
+.ah-progress{height:8px;background:var(--surface-200);border-radius:var(--radius-pill);overflow:hidden}
+.ah-progress > span{display:block;height:100%;background:var(--accent);border-radius:var(--radius-pill)}
+
+/* ProgressBar */
+.ah-progress--bordered{background:var(--surface-000);border:1px solid var(--line)}
+.ah-meter{height:8px;background:var(--surface-200);border-radius:var(--radius-pill);overflow:hidden}
+.ah-meter > span{display:block;height:100%;border-radius:var(--radius-pill);background:var(--brand)}
+.ah-meter--pass > span{background:var(--pass)} .ah-meter--fail > span{background:var(--fail)}
+
+/* QuizQuestion — options are buttons; state = colour + glyph */
+.ah-q{display:flex;flex-direction:column;gap:var(--space-3)}
+.ah-q__text{font-weight:600;margin:0}
+.ah-q__opts{display:flex;flex-direction:column;gap:6px}
+.ah-opt{display:flex;gap:var(--space-3);align-items:flex-start;text-align:left;width:100%;padding:var(--space-3) var(--space-4);border:1px solid var(--line-strong);border-radius:var(--radius-md);background:var(--surface-000);color:var(--ink);font:400 15px/22px var(--font-sans);cursor:pointer}
+.ah-opt:hover:not([disabled]){background:var(--surface-200)}
+.ah-opt:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.ah-opt .k{font:600 12px/22px var(--font-mono);color:var(--ink-muted);min-width:14px}
+.ah-opt[disabled]{cursor:default}
+.ah-opt.is-picked{background:var(--brand-soft);border-color:var(--brand)} .ah-opt.is-picked .k{color:var(--brand)}
+.ah-opt.is-right{background:var(--pass-soft);border-color:var(--pass)} .ah-opt.is-right .k{color:var(--pass)}
+.ah-opt.is-wrong{background:var(--fail-soft);border-color:var(--fail)} .ah-opt.is-wrong .k{color:var(--fail)}
+.ah-q__why{font-size:14px;line-height:22px;background:var(--surface-200);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);margin:0}
+
+/* ExamBar — sticky status bar during an exam */
+.ah-exambar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap;background:var(--surface-000);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-4);box-shadow:var(--shadow-raised)}
+.ah-exambar__title{display:flex;flex-direction:column;gap:2px}
+.ah-exambar .ah-progress{flex:1;min-width:120px}
+.ah-timer{font:500 22px/28px var(--font-mono);font-variant-numeric:tabular-nums;padding:var(--space-1) var(--space-3);border-radius:var(--radius-md);background:var(--surface-200);color:var(--ink)}
+.ah-timer.is-low{background:var(--fail-soft);color:var(--fail)}
+
+/* ExamResult */
+.ah-result{display:flex;justify-content:space-between;align-items:flex-end;gap:var(--space-4);flex-wrap:wrap;background:var(--surface-000);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--space-6)}
+.ah-result__score{font:500 56px/60px var(--font-mono);font-variant-numeric:tabular-nums}
+.ah-result__score small{font-size:24px;color:var(--ink-muted)}
+.ah-result__meta{font:400 14px/20px var(--font-mono);color:var(--ink-muted)}
+.ah-bytrack{display:flex;flex-direction:column;gap:var(--space-3)}
+.ah-bytrack__row{display:grid;grid-template-columns:160px minmax(0,1fr) 48px 72px;gap:var(--space-3);align-items:center;font-size:14px}
+
+/* Flashcard */
+.ah-fc{perspective:1200px;height:220px;border:0;padding:0;background:none;width:100%;cursor:pointer}
+.ah-fc__inner{position:relative;width:100%;height:100%;transition:transform .4s;transform-style:preserve-3d}
+.ah-fc.is-flipped .ah-fc__inner{transform:rotateY(180deg)}
+.ah-fc__face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--radius-lg);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:var(--space-3);padding:var(--space-6);text-align:center;border:1px solid var(--line);background:var(--surface-000);box-shadow:var(--shadow-raised);color:var(--ink);font-family:var(--font-sans)}
+.ah-fc__face--back{transform:rotateY(180deg);background:var(--brand-soft);border-color:transparent}
+.ah-fc__term{font-size:26px;line-height:32px;font-weight:600}
+.ah-fc__def{font-size:16px;line-height:25px}
+@media (prefers-reduced-motion:reduce){.ah-fc__inner{transition:none}}
+
+/* FilterChip */
+.ah-chip{font:600 13px/18px var(--font-sans);padding:6px var(--space-3);border-radius:var(--radius-pill);border:1px solid var(--line-strong);background:var(--surface-000);color:var(--ink);cursor:pointer}
+.ah-chip[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:var(--on-brand)}
+.ah-chip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+
+  
+  .g-cover-scope { background:var(--surface-100); color:var(--ink); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; width:960px; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:512px; width:448px; overflow:hidden; height:288px; }
+  .art svg { display:block; width:480px; height:288px; }
+  .brand { fill:var(--brand); }
+  .tint  { fill:var(--brand-soft); }
+  .acc   { fill:var(--accent); }
+  .deep  { fill:var(--code-bg); }
+  .run   { fill:var(--code-key); }
+  .flk   { fill:var(--accent); }
+  .blk   { rx:var(--radius-lg); }
+  .pill  { rx:var(--radius-sm); }
+  [data-theme="dark"] .deep { fill:var(--surface-200); }
+  [data-theme="dark"] .tint { fill:var(--brand-strong); }
+  .words { position:absolute; left:var(--space-8); bottom:var(--space-8); max-width:440px; }
+  .name { margin:0; font-size:64px; line-height:.95; font-weight:600; letter-spacing:-.02em; color:var(--ink); }
+  .tag { margin:var(--space-3) 0 0 2px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+
+body{margin:0;background:var(--surface-100);color:var(--ink);font-family:var(--font-sans)}
+.g-top{position:sticky;top:0;z-index:9;display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:var(--surface-200);border-bottom:1px solid var(--line)}
+.g-wrap{max-width:1000px;margin:0 auto;padding:24px 16px;display:flex;flex-direction:column;gap:32px}
+.g-item h2{margin:0 0 4px;font-size:22px} .g-sum{margin:0 0 12px;color:var(--ink-muted);font-size:14px}
+.g-frame{background:var(--surface-100);border:1px solid var(--line);border-radius:14px;padding:16px;overflow-x:auto}
+.g-cover{padding:0;overflow:auto} .g-cover .cover{margin:0}
+</style></head><body class="ah-root">
+<div class="g-top"><b>Automation Hub · components</b><button class="ah-btn ah-btn--secondary" id="t" type="button">Switch to dark</button></div>
+<main class="g-wrap"><p style="margin:0;color:var(--ink-muted)">Live gallery of every component in this design system. Guidelines: <code class="ah-inline-code">components/&lt;Name&gt;/README.md</code>. Tokens: <code class="ah-inline-code">tokens.json</code> / <code class="ah-inline-code">tokens.css</code>.</p>
+<section class="g-item"><h2>Cover</h2><p class="g-sum">The cover shown above the brand book.</p><div class="g-frame g-cover">
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      brand (pine) 136×248 slab bled off the top · brand-soft 96×104 · accent 96×72 · code-bg terminal 208×248 bleeding off the right — ≈42% of 960×288
+  arrangement one tall pine slab, a stacked tint/accent pair, and a terminal slab with satellites; bottoms aligned space-8 above the edge, space-4 gutters
+  pattern     literal motif "a test run": rows of result pills in code-key (pass) with two accent pills (flaky) inside the terminal block — the Hub speaks in pass / flaky / fail
+  scales      sides in space-2 multiples; gutters space-4; pill height space-2, row pitch space-4; block corners radius-lg, pills radius-sm (half of space-2)
+-->
+<rect class="brand blk" x="0" y="-16" width="136" height="272" rx="14"/>
+<rect class="tint blk" x="152" y="48" width="96" height="104" rx="14"/>
+<rect class="acc blk" x="152" y="168" width="96" height="88" rx="14"/>
+<rect class="deep blk" x="264" y="8" width="232" height="248" rx="14"/>
+<!-- run log: 11 rows at 16px pitch -->
+<rect class="run pill" x="288" y="36"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="36"  width="96" height="8" rx="4"/>
+<rect class="run pill" x="288" y="52"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="52"  width="64" height="8" rx="4"/>
+<rect class="run pill" x="288" y="68"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="68"  width="112" height="8" rx="4"/>
+<rect class="flk pill" x="288" y="84"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="84"  width="80" height="8" rx="4"/>
+<rect class="run pill" x="288" y="100" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="100" width="56" height="8" rx="4"/>
+<rect class="run pill" x="288" y="116" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="116" width="104" height="8" rx="4"/>
+<rect class="run pill" x="288" y="132" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="132" width="72" height="8" rx="4"/>
+<rect class="run pill" x="288" y="148" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="148" width="88" height="8" rx="4"/>
+<rect class="flk pill" x="288" y="164" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="164" width="48" height="8" rx="4"/>
+<rect class="run pill" x="288" y="180" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="180" width="96" height="8" rx="4"/>
+<rect class="run pill" x="288" y="212" width="160" height="8" rx="4"/>
+</svg>
+</div>
+<div class="words">
+  <h1 class="name">Automation<br>Hub</h1>
+  <p class="tag">Learn to automate the right checks, at the right level.</p>
+</div>
+</div>
+</div></section><section class="g-item"><h2>Button</h2><p class="g-sum">Triggers an action in the Hub: start a module, reveal an answer, mark progress.</p><div class="g-frame ">
+<div class="ah-row"><button class="ah-btn ah-btn--primary">Start module</button><button class="ah-btn ah-btn--secondary">Mark as done</button><button class="ah-btn ah-btn--ghost">Show answer</button><button class="ah-btn ah-btn--primary" disabled>Locked</button></div>
+</div></section><section class="g-item"><h2>Callout</h2><p class="g-sum">A tinted box that pulls one idea out of the reading flow: a tip, a risk or a key idea.</p><div class="g-frame ">
+<div style="display:flex;flex-direction:column;gap:12px;max-width:640px">
+<div class="ah-callout ah-callout--tip"><span class="ah-callout__label">Tip</span><p>Judge AI testing tools by recurring maintenance cost, not authoring speed.</p></div>
+<div class="ah-callout ah-callout--risk"><span class="ah-callout__label">Risk</span><p>Retries can turn real failures into misleading green builds. Track retries separately from genuine passes.</p></div>
+<div class="ah-callout ah-callout--note"><span class="ah-callout__label">Key idea</span><p>Select the lowest test level that provides sufficient confidence.</p></div>
+</div>
+</div></section><section class="g-item"><h2>Checklist</h2><p class="g-sum">A list of self-review items the learner ticks off — framework QA checks, study-path steps.</p><div class="g-frame ">
+<ul class="ah-checklist" style="max-width:560px">
+<li><label class="ah-check"><input type="checkbox" checked><span>Can a new engineer install and run one test quickly?</span></label></li>
+<li><label class="ah-check"><input type="checkbox" checked><span>Are tests isolated from each other?</span></label></li>
+<li><label class="ah-check"><input type="checkbox"><span>Are retries visible and monitored?</span></label></li>
+<li><label class="ah-check"><input type="checkbox"><span>Are secrets excluded from source control?</span></label></li>
+</ul>
+</div></section><section class="g-item"><h2>CodeBlock</h2><p class="g-sum">A dark terminal-style block for commands, code snippets and folder trees, identical in both themes.</p><div class="g-frame ">
+<pre class="ah-code" style="max-width:640px"><span class="c"># create a Playwright project</span>
+<span class="c">$</span> <span class="k">npm init</span> playwright@latest
+<span class="c">$</span> <span class="k">npx playwright test</span> <span class="s">--project=chromium</span>
+<span class="c">$</span> <span class="k">npx playwright test</span> <span class="s">--ui</span>
+<span class="c">$</span> <span class="k">npx playwright show-report</span></pre>
+</div></section><section class="g-item"><h2>ExamBar</h2><p class="g-sum">A sticky status bar shown during an exam: title, answered count, progress, countdown and Submit.</p><div class="g-frame ">
+<div class="ah-exambar" style="max-width:820px"><div class="ah-exambar__title"><span class="ah-label">Final exam</span><span style="font:400 14px/20px var(--font-mono)">28 / 40 answered</span></div>
+<div class="ah-progress ah-progress--bordered"><span style="width:70%"></span></div><span class="ah-timer">41:07</span><span class="ah-timer is-low">04:12</span><button class="ah-btn ah-btn--primary" style="min-height:32px">Submit</button></div>
+</div></section><section class="g-item"><h2>ExamResult</h2><p class="g-sum">The score summary after an exam: total, pass/fail verdict, time used, and a per-track breakdown.</p><div class="g-frame ">
+<div style="display:flex;flex-direction:column;gap:16px;max-width:820px">
+<div class="ah-result"><div><div class="ah-result__score">31<small> / 40</small></div><span class="ah-result__meta">78% · pass mark 26</span></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px"><span class="ah-badge ah-badge--pass" style="font-size:14px;padding:6px 12px">✓ Pass</span><span class="ah-result__meta">time used 42:18</span></div></div>
+<div class="ah-bytrack"><div class="ah-bytrack__row"><span>The tools</span><div class="ah-meter ah-meter--pass"><span style="width:88%"></span></div><span style="font-family:var(--font-mono)">7/8</span><span class="ah-badge ah-badge--pass">✓ 88%</span></div>
+<div class="ah-bytrack__row"><span>AI testing</span><div class="ah-meter ah-meter--fail"><span style="width:57%"></span></div><span style="font-family:var(--font-mono)">4/7</span><span class="ah-badge ah-badge--fail">✕ 57%</span></div></div></div>
+</div></section><section class="g-item"><h2>FilterChip</h2><p class="g-sum">A toggle chip for filtering a list: flashcard tracks, exam review (*Wrong or skipped* / *All*).</p><div class="g-frame ">
+<div class="ah-row"><button class="ah-chip" aria-pressed="true">All</button><button class="ah-chip" aria-pressed="false">Foundations</button><button class="ah-chip" aria-pressed="false">The tools</button><button class="ah-chip" aria-pressed="false">Certification</button></div>
+</div></section><section class="g-item"><h2>Flashcard</h2><p class="g-sum">A two-sided card for memorising a term: the term on the front, the definition on the back.</p><div class="g-frame ">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:760px">
+<button class="ah-fc" type="button"><div class="ah-fc__inner"><div class="ah-fc__face"><span class="ah-label">The tools</span><span class="ah-fc__term">BOLA</span><span style="font-size:13px;color:var(--ink-muted)">Tap to reveal</span></div></div></button>
+<button class="ah-fc is-flipped" type="button"><div class="ah-fc__inner"><div class="ah-fc__face"></div><div class="ah-fc__face ah-fc__face--back"><span class="ah-label" style="color:var(--brand)">BOLA</span><span class="ah-fc__def">Broken Object Level Authorization — accessing another user’s object by changing its id.</span></div></div></button></div>
+</div></section><section class="g-item"><h2>ProgressBar</h2><p class="g-sum">A thin pill bar for progress (`ah-progress`, mustard fill) or a score meter (`ah-meter`, pine / pass / fail fill).</p><div class="g-frame ">
+<div style="display:flex;flex-direction:column;gap:14px;max-width:520px">
+<div style="display:flex;justify-content:space-between"><span class="ah-label">Your progress</span><span style="font:400 13px var(--font-mono)">7 / 22</span></div>
+<div class="ah-progress ah-progress--bordered"><span style="width:32%"></span></div>
+<div class="ah-meter ah-meter--pass"><span style="width:80%"></span></div>
+<div class="ah-meter ah-meter--fail"><span style="width:40%"></span></div></div>
+</div></section><section class="g-item"><h2>QuizQuestion</h2><p class="g-sum">One multiple-choice question with lettered options, used in module quizzes and exams.</p><div class="g-frame ">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:900px">
+<div class="ah-q"><span class="ah-label">Unanswered</span><p class="ah-q__text">Which method is idempotent but not safe?</p><div class="ah-q__opts">
+<button class="ah-opt"><span class="k">A</span><span>GET</span></button><button class="ah-opt is-picked" aria-checked="true" role="radio"><span class="k">B</span><span>PUT</span></button><button class="ah-opt"><span class="k">C</span><span>POST</span></button></div></div>
+<div class="ah-q"><span class="ah-label">Answered</span><p class="ah-q__text">Which method is idempotent but not safe?</p><div class="ah-q__opts">
+<button class="ah-opt" disabled><span class="k">A</span><span>GET</span></button><button class="ah-opt is-right" disabled><span class="k">✓</span><span>PUT</span></button><button class="ah-opt is-wrong" disabled><span class="k">✕</span><span>POST</span></button></div>
+<p class="ah-q__why"><b>Not quite.</b> PUT and DELETE are idempotent but change state.</p></div></div>
+</div></section><section class="g-item"><h2>StatusBadge</h2><p class="g-sum">A small mono label that states a test-run status, a tool tag or a piece of metadata.</p><div class="g-frame ">
+<div class="ah-row"><span class="ah-badge ah-badge--pass">✓ Pass</span><span class="ah-badge ah-badge--fail">✕ Fail</span><span class="ah-badge ah-badge--flaky">~ Flaky</span><span class="ah-badge ah-badge--skip">– Skip</span><span class="ah-badge ah-badge--brand">Playwright</span><span class="ah-badge">12 min</span></div>
+</div></section><section class="g-item"><h2>TopicCard</h2><p class="g-sum">A clickable card that introduces one learning module on the Hub home and track pages.</p><div class="g-frame ">
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:640px">
+<a class="ah-card" href="#"><span class="ah-card__eyebrow">MODULE 06</span><h3 class="ah-card__title">Playwright</h3><p class="ah-card__body">Integrated runner, web-first assertions, fixtures, traces and API testing.</p><div class="ah-card__foot"><span class="ah-badge">15 min</span><span class="ah-badge ah-badge--pass">✓ Done</span></div></a>
+<a class="ah-card" href="#"><span class="ah-card__eyebrow">MODULE 16</span><h3 class="ah-card__title">Flaky tests</h3><p class="ah-card__body">Why results change without a relevant change — and how to prevent it.</p><div class="ah-card__foot"><span class="ah-badge">10 min</span><span class="ah-badge ah-badge--flaky">~ In progress</span></div></a>
+</div>
+</div></section></main>
+<script>const r=document.documentElement,b=document.getElementById('t');b.onclick=()=>{const d=r.dataset.theme==='dark';r.dataset.theme=d?'light':'dark';b.textContent=d?'Switch to dark':'Switch to light';};
+document.querySelectorAll('.ah-fc').forEach(f=>f.addEventListener('click',()=>f.classList.toggle('is-flipped')));</script>
+</body></html>

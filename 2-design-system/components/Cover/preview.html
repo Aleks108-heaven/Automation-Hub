@@ -1,0 +1,64 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Automation Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  html, body { margin:0; height:100%; }
+  body { background:var(--surface-100); color:var(--ink); font-family:var(--font-sans); overflow:hidden; }
+  .cover { position:relative; width:960px; height:288px; overflow:hidden; }
+  .art { position:absolute; top:0; left:512px; width:448px; overflow:hidden; height:288px; }
+  .art svg { display:block; width:480px; height:288px; }
+  .brand { fill:var(--brand); }
+  .tint  { fill:var(--brand-soft); }
+  .acc   { fill:var(--accent); }
+  .deep  { fill:var(--code-bg); }
+  .run   { fill:var(--code-key); }
+  .flk   { fill:var(--accent); }
+  .blk   { rx:var(--radius-lg); }
+  .pill  { rx:var(--radius-sm); }
+  [data-theme="dark"] .deep { fill:var(--surface-200); }
+  [data-theme="dark"] .tint { fill:var(--brand-strong); }
+  .words { position:absolute; left:var(--space-8); bottom:var(--space-8); max-width:440px; }
+  .name { margin:0; font-size:64px; line-height:.95; font-weight:600; letter-spacing:-.02em; color:var(--ink); }
+  .tag { margin:var(--space-3) 0 0 2px; font-size:14px; line-height:20px; color:var(--ink-muted); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      brand (pine) 136×248 slab bled off the top · brand-soft 96×104 · accent 96×72 · code-bg terminal 208×248 bleeding off the right — ≈42% of 960×288
+  arrangement one tall pine slab, a stacked tint/accent pair, and a terminal slab with satellites; bottoms aligned space-8 above the edge, space-4 gutters
+  pattern     literal motif "a test run": rows of result pills in code-key (pass) with two accent pills (flaky) inside the terminal block — the Hub speaks in pass / flaky / fail
+  scales      sides in space-2 multiples; gutters space-4; pill height space-2, row pitch space-4; block corners radius-lg, pills radius-sm (half of space-2)
+-->
+<rect class="brand blk" x="0" y="-16" width="136" height="272" rx="14"/>
+<rect class="tint blk" x="152" y="48" width="96" height="104" rx="14"/>
+<rect class="acc blk" x="152" y="168" width="96" height="88" rx="14"/>
+<rect class="deep blk" x="264" y="8" width="232" height="248" rx="14"/>
+<!-- run log: 11 rows at 16px pitch -->
+<rect class="run pill" x="288" y="36"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="36"  width="96" height="8" rx="4"/>
+<rect class="run pill" x="288" y="52"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="52"  width="64" height="8" rx="4"/>
+<rect class="run pill" x="288" y="68"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="68"  width="112" height="8" rx="4"/>
+<rect class="flk pill" x="288" y="84"  width="40" height="8" rx="4"/><rect class="run pill" x="336" y="84"  width="80" height="8" rx="4"/>
+<rect class="run pill" x="288" y="100" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="100" width="56" height="8" rx="4"/>
+<rect class="run pill" x="288" y="116" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="116" width="104" height="8" rx="4"/>
+<rect class="run pill" x="288" y="132" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="132" width="72" height="8" rx="4"/>
+<rect class="run pill" x="288" y="148" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="148" width="88" height="8" rx="4"/>
+<rect class="flk pill" x="288" y="164" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="164" width="48" height="8" rx="4"/>
+<rect class="run pill" x="288" y="180" width="40" height="8" rx="4"/><rect class="run pill" x="336" y="180" width="96" height="8" rx="4"/>
+<rect class="run pill" x="288" y="212" width="160" height="8" rx="4"/>
+</svg>
+</div>
+<div class="words">
+  <h1 class="name">Automation<br>Hub</h1>
+  <p class="tag">Learn to automate the right checks, at the right level.</p>
+</div>
+</div>
+</body>
+</html>

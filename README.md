@@ -46,10 +46,10 @@ Open `2-design-system/components-gallery.html` to see every component in light a
 
 ## Online version (Claude artifact)
 
-The hub is also published as a private page in your Claude artifacts gallery:
+The hub and its design system are also published as private pages in your Claude artifacts gallery:
 
 - **Automation Hub**: <https://claude.ai/artifact/AVdWTrGW8r1uWPs3efaeNX>
-- **Design system**: listed as "Design System" in the gallery at claude.ai/code/artifacts
+- **Design system**: <https://claude.ai/artifact/KgEHmdqwRje9HtsdjP8kcE>
 
 About the online version:
 

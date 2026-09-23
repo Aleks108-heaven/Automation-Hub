@@ -6,14 +6,113 @@ A self-study hub for QA engineers covering test automation (Playwright, Cypress,
 
 Open **`1-learning-hub/automation-hub.html`** in any modern browser (double-click it). It works offline, apart from the web font, which falls back to system fonts.
 
+## How to run
+
+### Option 1: open the file (no install)
+
+1. Clone or download the repository:
+
+   ```sh
+   git clone https://github.com/Aleks108-heaven/Automation-Hub.git
+   cd Automation-Hub
+   ```
+
+2. Double-click `1-learning-hub/automation-hub.html`, or drag it into Chrome, Edge, Firefox or Safari.
+3. Choose a language at the bottom of the sidebar (on a phone, open **Menu** first). You can also link straight to one:
+
+   | Language | Link |
+   | --- | --- |
+   | English | `automation-hub.html` |
+   | Українська | `automation-hub.html?lang=uk` |
+   | Polski | `automation-hub.html?lang=pl` |
+   | Español | `automation-hub.html?lang=es` |
+
+   Add a page name after `#` to open it directly, for example `automation-hub.html?lang=pl#exams` or `#playwright`.
+
+### Option 2: serve it locally
+
+Handy if you want to open the hub from a phone on the same network. Use either command, run from the repository folder:
+
+```sh
+npx serve 1-learning-hub          # Node.js
+python -m http.server -d 1-learning-hub 8080   # Python 3
+```
+
+Then open `http://localhost:8080/automation-hub.html` (for `serve`, use the port it prints).
+
+### The design system
+
+Open `2-design-system/components-gallery.html` to see every component in light and dark mode. `2-design-system/README.md` is the brand book.
+
+## Online version (Claude artifact)
+
+The hub is also published as a private page in your Claude artifacts gallery:
+
+- **Automation Hub**: <https://claude.ai/artifact/AVdWTrGW8r1uWPs3efaeNX>
+- **Design system**: listed as "Design System" in the gallery at claude.ai/code/artifacts
+
+About the online version:
+
+- **It's private.** Only you can open it until you share it from the page's **Share** menu.
+- **Progress is stored separately** from the local file: each copy remembers its own progress in the browser.
+- **To update it:** rebuild the HTML (see below), then ask Claude Code to republish `1-learning-hub/automation-hub.html` to the URL above. The link stays the same.
+- **In the terminal:** `/artifacts` in Claude Code lists your artifacts. Press `o` to open one, `c` to copy its link.
+
+## Editing and building
+
+The HTML file is generated. Edit the files in `1-learning-hub/source/` and rebuild.
+
+**Requirements:** a POSIX shell (Git Bash on Windows, or macOS/Linux) and, for the checks, Node.js 18+.
+
+```sh
+cd 1-learning-hub/source
+sh build.sh                      # writes ../automation-hub.html
+```
+
+The build joins the files in this order: `part1.html` (styles and layout), `data.js` → `data4.js` (English content), `i18n.js`, `i18n/*.js` (translations), `app.js`.
+
+### Changing content
+
+| To change… | Edit |
+| --- | --- |
+| A module's English text, quiz or sources | `data.js`–`data4.js` (later files add to or override earlier ones) |
+| Exam-only questions | `EXAM_BANK` in `data3.js` / `data4.js` |
+| Buttons, labels and messages (all languages) | `UI.en`, `UI.uk`, `UI.pl`, `UI.es` in `i18n.js` |
+| Translated module content | `i18n/<lang>-1.js` (Foundations, Tools), `-2` (Framework), `-3` (Quality, AI, Certification), `-4` (tracks, glossary, checklist, study path, exam bank) |
+| Final exam mix, pass mark, timer | `FINAL` in `app.js` |
+| Colours, spacing, fonts | `part1.html` (mirrors `2-design-system/tokens.css`) |
+
+**Rules that keep things working:**
+
+- **Add quiz questions to the end of a module's list.** Saved answers are stored by position, so inserting in the middle scrambles them.
+- **Translations must match the English structure:** the same number of sections, questions and answer options. Code blocks are written as `${P(0)}`, `${P(1)}`… and are filled in from the English. A translated section that doesn't match simply shows in English.
+- **Check the translations after any content change:**
+
+  ```sh
+  node tools/check-i18n.js 1-learning-hub/source    # prints "ALL OK" when everything matches
+  ```
+
+- **Regenerate the question bank** in `4-research-and-sources/question-bank.md` when questions change, so the offline copy stays in step.
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| Progress disappeared | Progress is saved per browser and per file location. Opening the file from another folder, browser or private window starts fresh. **Reset progress** in the sidebar also clears it. |
+| Page stays in English after choosing a language | The browser may be blocking storage, so the choice isn't remembered. Use a `?lang=` link instead. |
+| Part of a module is in English in another language | That section's translation no longer matches the English. Run `tools/check-i18n.js` to find it. |
+| Fonts look different offline | The IBM Plex fonts load from Google Fonts; without a connection, system fonts are used. |
+| `build.sh` fails with `\r` errors | The script got Windows line endings. `.gitattributes` prevents this; re-clone, or run `sed -i 's/\r$//' build.sh`. |
+
 ## What's in this folder
 
 | Folder | Contents |
-|---|---|
+| --- | --- |
 | `1-learning-hub/` | `automation-hub.html`: the complete hub in one file. It has 26 modules in 6 tracks, each opening with learning objectives. It also has 164 quiz questions, 65 exam-only questions, 63 flashcards, a tool picker, a 25-point framework checklist, a study path, per-track exams, a timed 40-question final exam and a guide to how the exams work. It is available in **English, Ukrainian (Українська), Polish (Polski) and Spanish (Español)**: pick a language at the bottom of the sidebar, or open the file with `?lang=uk`, `?lang=pl` or `?lang=es`. Code examples stay in English. |
 | `1-learning-hub/source/` | Editable sources: `part1.html` (styles and layout), `data.js` / `data2.js` / `data3.js` / `data4.js` (English content, quizzes, exam bank; `data4.js` adds the objectives, the deeper sections, the four new framework modules and the extra questions), `i18n.js` (language switching and interface text in all four languages), `i18n/uk-*.js`, `i18n/pl-*.js`, `i18n/es-*.js` (translated content), `app.js` (app logic and exams). When you change English content, update the matching translation files too. Anything that no longer matches falls back to English. Run `build.sh` to rebuild the HTML after editing. |
 | `2-design-system/` | The Automation Hub design system. `README.md` is the brand book. `tokens.json` / `tokens.css` hold the colours for light and dark themes, plus type, spacing and radius. `components/` has 13 components, each with a guide and a preview, and `components/bundle.css` has their styles. Open **`components-gallery.html`** to see every component live, with a light/dark toggle. |
 | `3-source-documents/` | Your two original documents: the Test Automation study guide (.docx) and the AI Testing research overview (.md). |
+| `tools/` | `check-i18n.js`: checks that every translation matches the English structure. |
 | `4-research-and-sources/` | `research-and-sources.md` lists every source per module, the corrections made during research, and the items to double-check. `question-bank.md` has all quiz and exam questions with answers and explanations, for revising offline. |
 
 ## What's new (September 2026)
@@ -53,10 +152,6 @@ Open **`1-learning-hub/automation-hub.html`** in any modern browser (double-clic
 
 - Saved progress is checked when it loads, so corrupted or tampered browser data can't inject content or break a page.
 - The language choice only accepts the four known languages, and all user-entered text is escaped before display.
-
-## Online versions
-
-The same hub and design system are also published as private pages in your Claude artifacts gallery (claude.ai/code/artifacts): **Automation Hub** (the learning site) and **Automation Hub** (Design System).
 
 ## Notes
 

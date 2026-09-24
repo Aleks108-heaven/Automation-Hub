@@ -649,6 +649,122 @@ Every quiz and exam question with its answer and explanation — useful for offl
 
 *Answer: B* — It turns schema validation into a check against accidental data exposure.
 
+### Beyond the big three: other frameworks
+
+**1. Which tool is designed for native iOS and Android apps through the WebDriver protocol?**
+
+- A. Puppeteer
+- B. Appium
+- C. Karate
+- D. TestCafe
+
+*Answer: B* — Appium extends WebDriver to native, hybrid and mobile-web apps.
+
+**2. In a stack of Cucumber → Serenity → Selenium → Grid, what does Cucumber provide?**
+
+- A. Browser control
+- B. Remote infrastructure
+- C. The specification layer: scenarios in Gherkin
+- D. HTML reporting only
+
+*Answer: C* — Cucumber turns Gherkin scenarios into step calls; the driver and grid do the browser work.
+
+**3. Your Java team wants API tests with minimal code and built-in JSON matching. Best fit?**
+
+- A. Karate
+- B. Puppeteer
+- C. Nightwatch
+- D. Cypress component testing
+
+*Answer: A* — Karate is a JVM DSL made for API tests with built-in JSON assertions.
+
+### Katalon
+
+**1. What does Katalon Studio use under the hood to drive web browsers?**
+
+- A. Its own browser engine
+- B. Selenium WebDriver
+- C. Cypress
+- D. Puppeteer only
+
+*Answer: B* — Katalon is built on Selenium for web and Appium for mobile, with its own IDE and keywords on top.
+
+**2. Why does Katalon keep locators in an Object Repository?**
+
+- A. To make tests run faster
+- B. So a changed element is fixed in one place for every test that uses it
+- C. Because Groovy cannot hold strings
+- D. To encrypt passwords
+
+*Answer: B* — Central locators follow the same idea as page objects: one change, many tests fixed.
+
+**3. What do you need to run Katalon tests from a CI server?**
+
+- A. Nothing beyond Studio
+- B. The Runtime Engine (KRE) with a licence
+- C. A Cypress Cloud account
+- D. Selenium IDE
+
+*Answer: B* — Command-line execution in CI uses Katalon Runtime Engine, which is licensed.
+
+### Applitools and Visual AI
+
+**1. A news page’s headlines change every hour but the layout must stay the same. Which match level?**
+
+- A. Exact
+- B. Strict
+- C. Layout
+- D. None needed
+
+*Answer: C* — Layout checks structure and alignment while ignoring changing text and images.
+
+**2. How does the Ultrafast Grid cover many browsers quickly?**
+
+- A. It runs the full test once per browser on local machines
+- B. It captures the DOM and CSS once and renders it on many browsers in the cloud
+- C. It only takes one screenshot
+- D. It converts tests to Selenium
+
+*Answer: B* — Capture once, render everywhere: the functional test runs one time.
+
+**3. What is the main danger in a visual baseline review?**
+
+- A. The dashboard is slow
+- B. Accepting a real bug as the new baseline
+- C. Too many match levels
+- D. Screenshots are too large
+
+*Answer: B* — Once accepted, the bug becomes the expected result and future runs pass.
+
+### Vibium: AI-native browser automation
+
+**1. Which protocol is Vibium built on?**
+
+- A. Classic HTTP WebDriver only
+- B. WebDriver BiDi
+- C. Cypress’s in-browser runner
+- D. Microsoft UI Automation
+
+*Answer: B* — Vibium speaks the W3C WebDriver BiDi protocol over WebSockets.
+
+**2. What lets an AI coding assistant drive Vibium’s browser?**
+
+- A. A Chrome extension
+- B. Its built-in MCP server
+- C. Selenium Grid
+- D. A Katalon plugin
+
+*Answer: B* — The Vibium binary exposes an MCP server that assistants can connect to.
+
+**3. Who created Vibium?**
+
+- A. The Cypress founders
+- B. Jason Huggins, creator of Selenium and Appium
+- C. The Playwright team at Microsoft
+- D. Katalon
+
+*Answer: B* — Vibium is Jason Huggins’ project, following Selenium (2004) and Appium (2012).
+
 ### Exam-only questions
 
 **E1. Playwright: which locator strategy is recommended first?** · K2
@@ -1670,6 +1786,35 @@ Every quiz and exam question with its answer and explanation — useful for offl
 - D. They need Cypress Cloud
 
 *Answer: B* — Generated oracles often mirror what the app does, not what it should do.
+
+### AI in test automation, hands-on
+
+**1. An AI healer changed a locator and the checkout test passes again. What should happen next?**
+
+- A. Nothing, the test is green
+- B. A person reviews the heal, because the UI change itself may be a bug
+- C. Delete the old locator history
+- D. Turn healing off everywhere
+
+*Answer: B* — A heal is a proposal. The UI changed for a reason, and that reason may be a defect.
+
+**2. Which tool’s AI agents output ordinary test files you commit to the repository?**
+
+- A. Playwright test agents
+- B. Applitools Ultrafast Grid
+- C. Katalon TestOps
+- D. Selenium Grid
+
+*Answer: A* — The planner, generator and healer produce and edit normal Playwright test code.
+
+**3. Why commit AI-generated test code instead of regenerating it on each run?**
+
+- A. Generation is non-deterministic, so each run could test something different
+- B. Git needs it
+- C. Models cannot run in CI
+- D. It makes tests slower
+
+*Answer: A* — A stable, reviewed test is the point. Regenerating every run makes results incomparable.
 
 ### Testing AI-based systems
 

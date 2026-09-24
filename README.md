@@ -1,6 +1,6 @@
 # Automation Hub
 
-A self-study hub for QA engineers covering test automation (Playwright, Cypress, Selenium), API testing, framework engineering, CI/CD, flaky tests, AI testing and ISTQB certification. It comes with its own design system. Content was checked against official sources on 23 September 2026.
+A self-study hub for QA engineers covering test automation (Playwright, Cypress, Selenium, Katalon, Applitools, Vibium and other frameworks), API testing, framework engineering, CI/CD, flaky tests, AI testing and ISTQB certification. It comes with its own design system. Content was checked against official sources on 23 September 2026.
 
 ## Start here
 
@@ -69,13 +69,14 @@ cd 1-learning-hub/source
 sh build.sh                      # writes ../automation-hub.html
 ```
 
-The build joins the files in this order: `part1.html` (styles and layout), `data.js` → `data4.js` (English content), `i18n.js`, `i18n/*.js` (translations), `app.js`.
+The build joins the files in this order: `part1.html` (styles and layout), `data.js` → `data5.js` (English content), `i18n.js`, `i18n/*.js` (translations), `app.js`.
 
 ### Changing content
 
 | To change… | Edit |
 | --- | --- |
-| A module's English text, quiz or sources | `data.js`–`data4.js` (later files add to or override earlier ones) |
+| A module's English text, quiz or sources | `data.js`–`data5.js` (later files add to or override earlier ones) |
+| Flashcard pictures | `FC_PIC` (which picture each card gets) and `PIC` (the drawings) in `data5.js` |
 | Exam-only questions | `EXAM_BANK` in `data3.js` / `data4.js` |
 | Buttons, labels and messages (all languages) | `UI.en`, `UI.uk`, `UI.pl`, `UI.es` in `i18n.js` |
 | Translated module content | `i18n/<lang>-1.js` (Foundations, Tools), `-2` (Framework), `-3` (Quality, AI, Certification), `-4` (tracks, glossary, checklist, study path, exam bank) |
@@ -92,7 +93,8 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
   node tools/check-i18n.js 1-learning-hub/source    # prints "ALL OK" when everything matches
   ```
 
-- **Regenerate the question bank** in `4-research-and-sources/question-bank.md` when questions change, so the offline copy stays in step.
+- **Add new sections to the end of a module** (`M(id).sections.push(...)`). Translations then still line up, and the new section shows in English until it is translated.
+- **Regenerate the question bank** when questions change: `node tools/build-question-bank.js`.
 
 ## Troubleshooting
 
@@ -108,14 +110,21 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
 
 | Folder | Contents |
 | --- | --- |
-| `1-learning-hub/` | `automation-hub.html`: the complete hub in one file. It has 26 modules in 6 tracks, each opening with learning objectives. It also has 164 quiz questions, 65 exam-only questions, 63 flashcards, a tool picker, a 25-point framework checklist, a study path, per-track exams, a timed 40-question final exam and a guide to how the exams work. It is available in **English, Ukrainian (Українська), Polish (Polski) and Spanish (Español)**: pick a language at the bottom of the sidebar, or open the file with `?lang=uk`, `?lang=pl` or `?lang=es`. Code examples stay in English. |
+| `1-learning-hub/` | `automation-hub.html`: the complete hub in one file. It has 31 modules in 6 tracks, each opening with learning objectives. It also has 179 quiz questions, 65 exam-only questions, 78 illustrated flashcards, a tool picker, a 25-point framework checklist, a study path, per-track exams, a timed 40-question final exam and a guide to how the exams work. It is available in **English, Ukrainian (Українська), Polish (Polski) and Spanish (Español)**: pick a language at the bottom of the sidebar, or open the file with `?lang=uk`, `?lang=pl` or `?lang=es`. Code examples stay in English. |
 | `1-learning-hub/source/` | Editable sources: `part1.html` (styles and layout), `data.js` / `data2.js` / `data3.js` / `data4.js` (English content, quizzes, exam bank; `data4.js` adds the objectives, the deeper sections, the four new framework modules and the extra questions), `i18n.js` (language switching and interface text in all four languages), `i18n/uk-*.js`, `i18n/pl-*.js`, `i18n/es-*.js` (translated content), `app.js` (app logic and exams). When you change English content, update the matching translation files too. Anything that no longer matches falls back to English. Run `build.sh` to rebuild the HTML after editing. |
 | `2-design-system/` | The Automation Hub design system. `README.md` is the brand book. `tokens.json` / `tokens.css` hold the colours for light and dark themes, plus type, spacing and radius. `components/` has 13 components, each with a guide and a preview, and `components/bundle.css` has their styles. Open **`components-gallery.html`** to see every component live, with a light/dark toggle. |
 | `3-source-documents/` | Your two original documents: the Test Automation study guide (.docx) and the AI Testing research overview (.md). |
-| `tools/` | `check-i18n.js`: checks that every translation matches the English structure. |
+| `tools/` | `check-i18n.js`: checks that every translation matches the English structure and lists what is still in English. `build-question-bank.js`: rewrites `question-bank.md` from the sources. |
 | `4-research-and-sources/` | `research-and-sources.md` lists every source per module, the corrections made during research, and the items to double-check. `question-bank.md` has all quiz and exam questions with answers and explanations, for revising offline. |
 
-## What's new (September 2026)
+## What's new (24 September 2026)
+
+- **Deeper tool modules.** Playwright: network mocking, visual comparisons, the debugging toolkit, Playwright MCP and test agents (planner, generator, healer). Cypress: `cy.intercept()`, component testing, `cy.prompt()`. Selenium: how Selenium 4 fits together (Selenium Manager, BiDi, Grid 4), relative locators with a Java page object, Selenium and AI.
+- **Five new modules:** *Beyond the big three* (WebdriverIO, Robot Framework, Cucumber, Appium, Karate, Puppeteer, TestCafe and more, plus how the layers stack), *Katalon*, *Applitools and Visual AI*, *Vibium* and *AI in test automation, hands-on*.
+- **Flashcards have pictures.** Every card shows a small diagram (test pyramid, locator target, flaky signal and so on) that works in light and dark mode. 15 new cards cover the new tools.
+- 15 new quiz questions. The new content is in English for now; Ukrainian, Polish and Spanish show it in English until translated (`tools/check-i18n.js` lists it).
+
+## Earlier (September 2026)
 
 ### More detail in every module
 

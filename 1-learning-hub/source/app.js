@@ -166,8 +166,8 @@ function flashcards(){
   <div class="chips" role="group" aria-label="${t('filterAria')}"><button class="chip" data-t="all" aria-pressed="${fc.track==='all'}">${t('all')}</button>${TRACKS.map(tk=>`<button class="chip" data-t="${tk.id}" aria-pressed="${fc.track===tk.id}">${esc(tk.name)}</button>`).join('')}</div>
   <div class="fc-wrap">
    <button class="fc ${fc.flipped?'flipped':''}" id="card" type="button" aria-label="${esc(t('fcAria',g[0],fc.flipped?g[1]:''))}"><div class="fc__inner">
-    <div class="fc__face"><span class="label">${esc(trackName(g[2]))}</span><span class="fc__term">${esc(g[0])}</span><span class="empty" style="font-size:13px">${t('tapReveal')}</span></div>
-    <div class="fc__face fc__face--back"><span class="label" style="color:var(--brand)">${esc(g[0])}</span><span class="fc__def">${esc(g[1])}</span></div></div></button>
+    <div class="fc__face">${fcPic(g[3])}<span class="label">${esc(trackName(g[2]))}</span><span class="fc__term">${esc(g[0])}</span><span class="empty" style="font-size:13px">${t('tapReveal')}</span></div>
+    <div class="fc__face fc__face--back">${fcPic(g[3]).replace('fc__pic','fc__pic fc__pic--sm')}<span class="label" style="color:var(--brand)">${esc(g[0])}</span><span class="fc__def">${esc(g[1])}</span></div></div></button>
    <div class="fc-ctrl"><button class="btn btn--secondary" id="prev" type="button">${t('prevBtn')}</button><span class="mono tnum">${fc.i+1} / ${list.length}</span><button class="btn btn--secondary" id="next" type="button">${t('nextBtn')}</button></div>
    <div><button class="btn btn--ghost" id="shuf" type="button">${t('shuffle')}</button></div></div></div>`;
   const go=d=>{fc.i=(fc.i+d+list.length)%list.length;fc.flipped=false;flashcards();$('#card').focus();};

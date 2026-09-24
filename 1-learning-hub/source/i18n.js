@@ -35,7 +35,8 @@ function applyTR(){
   TRACKS.forEach(tk=>{const x=tr.tracks&&tr.tracks[tk.id];if(x){tk.name=x[0];tk.blurb=x[1];}});
   MODULES.forEach(m=>{const x=tr.modules&&tr.modules[m.id];if(!x)return;
     if(x.title)m.title=x.title;if(x.sum)m.sum=x.sum;
-    if(x.sections&&x.sections.length===m.sections.length)m.sections.forEach((s,i)=>{
+    /* newer English sections are appended, so a shorter translation still covers the sections before them */
+    if(x.sections&&x.sections.length<=m.sections.length)m.sections.forEach((s,i)=>{
       const pres=s.body.match(PRE)||[],y=x.sections[i];if(!y)return;
       if((y[1].match(TOK)||[]).length!==pres.length)return;
       s.h=y[0];s.body=y[1].replace(TOK,(_,n)=>pres[+n]);});

@@ -79,7 +79,7 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
 | Flashcard pictures | `FC_PIC` (which picture each card gets) and `PIC` (the drawings) in `data5.js` |
 | Exam-only questions | `EXAM_BANK` in `data3.js` / `data4.js` |
 | Buttons, labels and messages (all languages) | `UI.en`, `UI.uk`, `UI.pl`, `UI.es` in `i18n.js` |
-| Translated module content | `i18n/<lang>-1.js` (Foundations, Tools), `-2` (Framework), `-3` (Quality, AI, Certification), `-4` (tracks, glossary, checklist, study path, exam bank) |
+| Translated module content | `i18n/<lang>-1.js` (Foundations, Tools), `-2` (Framework), `-3` (Quality, AI, Certification), `-4` (tracks, glossary, checklist, study path, exam bank), `-5` (the September 2026 additions) |
 | Final exam mix, pass mark, timer | `FINAL` in `app.js` |
 | Colours, spacing, fonts | `part1.html` (mirrors `2-design-system/tokens.css`) |
 
@@ -122,7 +122,8 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
 - **Deeper tool modules.** Playwright: network mocking, visual comparisons, the debugging toolkit, Playwright MCP and test agents (planner, generator, healer). Cypress: `cy.intercept()`, component testing, `cy.prompt()`. Selenium: how Selenium 4 fits together (Selenium Manager, BiDi, Grid 4), relative locators with a Java page object, Selenium and AI.
 - **Five new modules:** *Beyond the big three* (WebdriverIO, Robot Framework, Cucumber, Appium, Karate, Puppeteer, TestCafe and more, plus how the layers stack), *Katalon*, *Applitools and Visual AI*, *Vibium* and *AI in test automation, hands-on*.
 - **Flashcards have pictures.** Every card shows a small diagram (test pyramid, locator target, flaky signal and so on) that works in light and dark mode. 15 new cards cover the new tools.
-- 15 new quiz questions. The new content is in English for now; Ukrainian, Polish and Spanish show it in English until translated (`tools/check-i18n.js` lists it).
+- 15 new quiz questions. All new content is translated into Ukrainian, Polish and Spanish (`i18n/<lang>-5.js`).
+- Fixed: on exam cards the **Start** button could stick out of the card; card footers now wrap (hub and design system).
 
 ## Earlier (September 2026)
 

@@ -212,15 +212,15 @@ ${T(['','Pixel comparison','Visual AI (Eyes)'],[
    ['Ignore Colors','Everything except colour','Theme changes, dark mode checks'],
    ['Dynamic','Text patterns (dates, emails, numbers) instead of exact values','Dashboards with live data'],
    ['Exact','Pixel for pixel','Rarely; charts or images that must be identical']])+`<p>You can also mark <b>regions</b> on the baseline: ignore, floating, layout-only and so on, for one widget instead of the whole page.</p>`),
-  S('Adding Eyes to a test',`<pre class="code"><span class="c">// Playwright, using the Eyes fixture</span>
+  S('Adding Eyes to a test',`<p>Add a visual checkpoint next to your existing test — one call, either tool:</p>
+<pre class="code"><span class="c">// Playwright, using the Eyes fixture</span>
 <span class="k">import</span> { test } <span class="k">from</span> <span class="s">'@applitools/eyes-playwright/fixture'</span>;
 
 test(<span class="s">'pricing page looks right'</span>, <span class="k">async</span> ({ page, eyes }) =&gt; {
   <span class="k">await</span> page.goto(<span class="s">'/pricing'</span>);
   <span class="k">await</span> eyes.check(<span class="s">'Pricing'</span>, { fully: <span class="k">true</span> });   <span class="c">// full-page checkpoint</span>
-});
-
-<span class="c">// Cypress</span>
+});</pre>
+<pre class="code"><span class="c">// Cypress</span>
 cy.eyesOpen({ appName: <span class="s">'Shop'</span>, testName: <span class="s">'pricing'</span> });
 cy.visit(<span class="s">'/pricing'</span>);
 cy.eyesCheckWindow(<span class="s">'Pricing'</span>);

@@ -128,7 +128,9 @@ ${T(['','Porównanie pikseli','Visual AI (Eyes)'],[
    ['Ignore Colors','Wszystko poza kolorem','Zmian motywu, sprawdzania trybu ciemnego'],
    ['Dynamic','Wzorce tekstu (daty, e-maile, liczby) zamiast dokładnych wartości','Pulpitów z danymi na żywo'],
    ['Exact','Piksel w piksel','Rzadko; wykresy lub obrazy, które muszą być identyczne']])+`<p>Możesz też oznaczać <b>regiony</b> na wzorcu: ignore, floating, layout-only itd. — dla jednego widżetu zamiast całej strony.</p>`],
-  ['Dodawanie Eyes do testu',`${P(0)}
+  ['Dodawanie Eyes do testu',`<p>Dodaj wizualny punkt kontrolny obok istniejącego testu — jedno wywołanie, dowolne narzędzie:</p>
+${P(0)}
+${P(1)}
 <p>Klucz API pochodzi ze zmiennej środowiskowej <code class="i">APPLITOOLS_API_KEY</code>. Nazwy i opcje SDK zmieniają się między wersjami, więc kopiuj z aktualnej dokumentacji.</p>`],
   ['Ultrafast Grid i Autonomous',UL(['<b>Ultrafast Grid</b>: test działa raz w jednej przeglądarce; Eyes przechwytuje DOM i CSS i renderuje je równolegle w chmurze w wielu przeglądarkach, rozmiarach okna i urządzeniach.','<b>Przegląd wzorców</b>: różnice pojawiają się na pulpicie Eyes, gdzie ktoś je akceptuje (nowy wzorzec) lub odrzuca (błąd). Zmiany można grupować, by jedna decyzja objęła wiele ekranów.','<b>Applitools Autonomous</b>: osobna platforma, która przeszukuje serwis i pozwala pisać testy funkcjonalne, wizualne i API zwykłym angielskim, ze sprawdzeniami Visual AI na każdym kroku.'])+CO('risk','Ryzyko','Zaakceptowanie wzorca to decyzja testowa. Ustalcie, kto może akceptować, i nigdy nie akceptujcie hurtem różnic, których nie obejrzeliście: prawdziwy błąd staje się wtedy nowym oczekiwanym wynikiem.')],
  ],

@@ -128,7 +128,9 @@ ${T(['','Comparación de píxeles','Visual AI (Eyes)'],[
    ['Ignore Colors','Todo salvo el color','Cambios de tema, comprobaciones del modo oscuro'],
    ['Dynamic','Patrones de texto (fechas, emails, números) en lugar de valores exactos','Paneles con datos en vivo'],
    ['Exact','Píxel a píxel','Rara vez; gráficos o imágenes que deben ser idénticos']])+`<p>También puedes marcar <b>regiones</b> en la referencia: ignore, floating, layout-only, etc., para un widget en vez de toda la página.</p>`],
-  ['Añadir Eyes a una prueba',`${P(0)}
+  ['Añadir Eyes a una prueba',`<p>Añade un punto de control visual junto a tu prueba existente — una sola llamada, cualquiera de las dos herramientas:</p>
+${P(0)}
+${P(1)}
 <p>La clave de API sale de la variable de entorno <code class="i">APPLITOOLS_API_KEY</code>. Los nombres y opciones de los SDK cambian entre versiones, así que copia de la documentación actual.</p>`],
   ['Ultrafast Grid y Autonomous',UL(['<b>Ultrafast Grid</b>: la prueba se ejecuta una vez en un navegador; Eyes captura el DOM y el CSS y los renderiza en paralelo en la nube en muchos navegadores, tamaños de ventana y dispositivos.','<b>Revisión de referencias</b>: las diferencias aparecen en el panel de Eyes, donde alguien las acepta (nueva referencia) o las rechaza (error). Los cambios se pueden agrupar para que una decisión cubra muchas pantallas.','<b>Applitools Autonomous</b>: una plataforma aparte que recorre el sitio y permite escribir pruebas funcionales, visuales y de API en inglés natural, con comprobaciones de Visual AI en cada paso.'])+CO('risk','Riesgo','Aceptar una referencia es una decisión de prueba. Acordad quién puede aceptar y no aceptéis nunca en bloque diferencias que no habéis mirado: eso convierte un error real en el nuevo resultado esperado.')],
  ],

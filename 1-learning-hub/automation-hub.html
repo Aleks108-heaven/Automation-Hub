@@ -2039,15 +2039,15 @@ ${T(['','Pixel comparison','Visual AI (Eyes)'],[
    ['Ignore Colors','Everything except colour','Theme changes, dark mode checks'],
    ['Dynamic','Text patterns (dates, emails, numbers) instead of exact values','Dashboards with live data'],
    ['Exact','Pixel for pixel','Rarely; charts or images that must be identical']])+`<p>You can also mark <b>regions</b> on the baseline: ignore, floating, layout-only and so on, for one widget instead of the whole page.</p>`),
-  S('Adding Eyes to a test',`<pre class="code"><span class="c">// Playwright, using the Eyes fixture</span>
+  S('Adding Eyes to a test',`<p>Add a visual checkpoint next to your existing test — one call, either tool:</p>
+<pre class="code"><span class="c">// Playwright, using the Eyes fixture</span>
 <span class="k">import</span> { test } <span class="k">from</span> <span class="s">'@applitools/eyes-playwright/fixture'</span>;
 
 test(<span class="s">'pricing page looks right'</span>, <span class="k">async</span> ({ page, eyes }) =&gt; {
   <span class="k">await</span> page.goto(<span class="s">'/pricing'</span>);
   <span class="k">await</span> eyes.check(<span class="s">'Pricing'</span>, { fully: <span class="k">true</span> });   <span class="c">// full-page checkpoint</span>
-});
-
-<span class="c">// Cypress</span>
+});</pre>
+<pre class="code"><span class="c">// Cypress</span>
 cy.eyesOpen({ appName: <span class="s">'Shop'</span>, testName: <span class="s">'pricing'</span> });
 cy.visit(<span class="s">'/pricing'</span>);
 cy.eyesCheckWindow(<span class="s">'Pricing'</span>);
@@ -3655,7 +3655,9 @@ ${T(['','Comparación de píxeles','Visual AI (Eyes)'],[
    ['Ignore Colors','Todo salvo el color','Cambios de tema, comprobaciones del modo oscuro'],
    ['Dynamic','Patrones de texto (fechas, emails, números) en lugar de valores exactos','Paneles con datos en vivo'],
    ['Exact','Píxel a píxel','Rara vez; gráficos o imágenes que deben ser idénticos']])+`<p>También puedes marcar <b>regiones</b> en la referencia: ignore, floating, layout-only, etc., para un widget en vez de toda la página.</p>`],
-  ['Añadir Eyes a una prueba',`${P(0)}
+  ['Añadir Eyes a una prueba',`<p>Añade un punto de control visual junto a tu prueba existente — una sola llamada, cualquiera de las dos herramientas:</p>
+${P(0)}
+${P(1)}
 <p>La clave de API sale de la variable de entorno <code class="i">APPLITOOLS_API_KEY</code>. Los nombres y opciones de los SDK cambian entre versiones, así que copia de la documentación actual.</p>`],
   ['Ultrafast Grid y Autonomous',UL(['<b>Ultrafast Grid</b>: la prueba se ejecuta una vez en un navegador; Eyes captura el DOM y el CSS y los renderiza en paralelo en la nube en muchos navegadores, tamaños de ventana y dispositivos.','<b>Revisión de referencias</b>: las diferencias aparecen en el panel de Eyes, donde alguien las acepta (nueva referencia) o las rechaza (error). Los cambios se pueden agrupar para que una decisión cubra muchas pantallas.','<b>Applitools Autonomous</b>: una plataforma aparte que recorre el sitio y permite escribir pruebas funcionales, visuales y de API en inglés natural, con comprobaciones de Visual AI en cada paso.'])+CO('risk','Riesgo','Aceptar una referencia es una decisión de prueba. Acordad quién puede aceptar y no aceptéis nunca en bloque diferencias que no habéis mirado: eso convierte un error real en el nuevo resultado esperado.')],
  ],
@@ -4884,7 +4886,9 @@ ${T(['','Porównanie pikseli','Visual AI (Eyes)'],[
    ['Ignore Colors','Wszystko poza kolorem','Zmian motywu, sprawdzania trybu ciemnego'],
    ['Dynamic','Wzorce tekstu (daty, e-maile, liczby) zamiast dokładnych wartości','Pulpitów z danymi na żywo'],
    ['Exact','Piksel w piksel','Rzadko; wykresy lub obrazy, które muszą być identyczne']])+`<p>Możesz też oznaczać <b>regiony</b> na wzorcu: ignore, floating, layout-only itd. — dla jednego widżetu zamiast całej strony.</p>`],
-  ['Dodawanie Eyes do testu',`${P(0)}
+  ['Dodawanie Eyes do testu',`<p>Dodaj wizualny punkt kontrolny obok istniejącego testu — jedno wywołanie, dowolne narzędzie:</p>
+${P(0)}
+${P(1)}
 <p>Klucz API pochodzi ze zmiennej środowiskowej <code class="i">APPLITOOLS_API_KEY</code>. Nazwy i opcje SDK zmieniają się między wersjami, więc kopiuj z aktualnej dokumentacji.</p>`],
   ['Ultrafast Grid i Autonomous',UL(['<b>Ultrafast Grid</b>: test działa raz w jednej przeglądarce; Eyes przechwytuje DOM i CSS i renderuje je równolegle w chmurze w wielu przeglądarkach, rozmiarach okna i urządzeniach.','<b>Przegląd wzorców</b>: różnice pojawiają się na pulpicie Eyes, gdzie ktoś je akceptuje (nowy wzorzec) lub odrzuca (błąd). Zmiany można grupować, by jedna decyzja objęła wiele ekranów.','<b>Applitools Autonomous</b>: osobna platforma, która przeszukuje serwis i pozwala pisać testy funkcjonalne, wizualne i API zwykłym angielskim, ze sprawdzeniami Visual AI na każdym kroku.'])+CO('risk','Ryzyko','Zaakceptowanie wzorca to decyzja testowa. Ustalcie, kto może akceptować, i nigdy nie akceptujcie hurtem różnic, których nie obejrzeliście: prawdziwy błąd staje się wtedy nowym oczekiwanym wynikiem.')],
  ],
@@ -6113,7 +6117,9 @@ ${T(['','Попіксельне порівняння','Visual AI (Eyes)'],[
    ['Ignore Colors','Усе, крім кольору','Змін теми, перевірок темного режиму'],
    ['Dynamic','Шаблони тексту (дати, email, числа) замість точних значень','Дашбордів із живими даними'],
    ['Exact','Піксель у піксель','Рідко; графіки чи зображення, що мають бути ідентичні']])+`<p>Також можна позначати <b>області</b> на еталоні: ignore, floating, layout-only тощо — для одного віджета, а не всієї сторінки.</p>`],
-  ['Додаємо Eyes у тест',`${P(0)}
+  ['Додаємо Eyes у тест',`<p>Додайте візуальну контрольну точку поруч із наявним тестом — один виклик, будь-який інструмент:</p>
+${P(0)}
+${P(1)}
 <p>API-ключ береться зі змінної середовища <code class="i">APPLITOOLS_API_KEY</code>. Назви й опції SDK змінюються між версіями, тож копіюйте з актуальної документації.</p>`],
   ['Ultrafast Grid і Autonomous',UL(['<b>Ultrafast Grid</b>: тест запускається один раз в одному браузері; Eyes захоплює DOM і CSS і паралельно рендерить їх у хмарі в багатьох браузерах, розмірах вікна й пристроях.','<b>Перегляд еталонів</b>: відмінності з’являються в дашборді Eyes, де хтось приймає (новий еталон) або відхиляє (баг). Зміни можна групувати, щоб одне рішення охоплювало багато екранів.','<b>Applitools Autonomous</b>: окрема платформа, що обходить сайт і дає писати функціональні, візуальні й API-тести звичайною англійською з перевірками Visual AI на кожному кроці.'])+CO('risk','Ризик','Прийняти еталон — це тестове рішення. Домовтеся, хто може приймати, і ніколи не приймайте гуртом відмінності, яких не переглянули: так справжній баг стає новим очікуваним результатом.')],
  ],

@@ -30,6 +30,8 @@ const practice=()=>[
  {id:'picker',title:t('prPick'),body:t('prPickB')},
  {id:'checklist',title:t('prFw'),body:t('prFwB',FRAMEWORK_CHECKS.length)},
  {id:'path',title:t('prPath'),body:t('prPathB',STUDY_PATH.length)},
+ {id:'resources',title:t('prResources'),body:t('prResourcesB')},
+ {id:'career',title:t('prCareer'),body:t('prCareerB')},
 ];
 /* static shell text and the language picker; rebuilt whenever the language changes */
 function applyShell(){
@@ -84,12 +86,14 @@ function home(){
   const d=progress(),next=MODULES.find(m=>!st.done[m.id]);
   const answered=Object.keys(st.ans).length,correct=Object.entries(st.ans).filter(([k,v])=>{const[id,q]=k.split(':');const m=MODULES.find(x=>x.id===id);return m&&m.quiz[+q]&&m.quiz[+q].a===v}).length;
   const mins=MODULES.reduce((a,m)=>a+m.min,0);
+  const remain=MODULES.filter(m=>!st.done[m.id]).reduce((a,m)=>a+m.min,0);
   main.innerHTML=`<div class="wrap">
   <section class="hero">
     <div><span class="label">${t('heroLabel')}</span>
       <h1 style="margin-top:12px">${t('heroTitle')}</h1>
       <p class="lede">${t('heroLede',MODULES.length,(Math.round(mins/60*10)/10).toLocaleString(LANG))}</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">${next?`<a class="btn btn--primary" href="#${next.id}">${d?t('cont'):t('start')}: ${esc(next.title)}</a>`:`<a class="btn btn--primary" href="#quiz">${t('allDone')}</a>`}<a class="btn btn--secondary" href="#exams">${t('takeExam')}</a></div>
+      ${remain?`<p class="empty mono tnum" style="margin-top:12px;font-size:13px">${t('timeLeft',remain)}</p>`:''}
     </div>
     <div class="runlog" aria-hidden="true">
       <div class="row mu">$ npx playwright test</div>
@@ -187,6 +191,14 @@ function checkPage(kind){
    <ul class="checklist">${items.map((t,i)=>`<li><label class="check"><input type="checkbox" id="${kind}-${i}" data-i="${i}" ${store[i]?'checked':''}><span>${kind==='path'?`<span class="mono" style="color:var(--ink-muted);margin-right:8px">${num(i)}</span>`:''}${esc(t)}</span></label></li>`).join('')}</ul>
    ${kind==='fw'?CO('tip',t('tip'),t('fwTip')):''}</div>`;
   main.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=()=>{store[c.dataset.i]=c.checked;save();const y=scrollY;checkPage(kind);scrollTo(0,y);const el=document.getElementById(c.id);el&&el.focus();});
+}
+function resourcesPage(){
+  const html=(TR[LANG]&&TR[LANG].resourcesHtml)||RESOURCES_HTML;
+  main.innerHTML=`<div class="wrap"><header class="mod-head"><span class="label">${t('practice')}</span><h1>${t('prResources')}</h1><p class="sum">${t('prResourcesB')}</p></header>${html}</div>`;
+}
+function careerPage(){
+  const html=(TR[LANG]&&TR[LANG].careerHtml)||CAREER_HTML;
+  main.innerHTML=`<div class="wrap"><header class="mod-head"><span class="label">${t('practice')}</span><h1>${t('prCareer')}</h1><p class="sum">${t('prCareerB')}</p></header>${html}</div>`;
 }
 const PK=[
  {id:'br',q:'Which browsers must you cover?',o:[['Chromium only is fine',{pw:2,cy:2,se:1}],['Chromium and Firefox',{pw:2,cy:2,se:2}],['Safari / WebKit is required too',{pw:3,cy:0,se:2}],['Many browser versions on remote machines',{pw:1,cy:0,se:3}]]},
@@ -340,7 +352,8 @@ function render(){
   if(idx(r)>-1)module(r);
   else if(r==='quiz')mixedQuiz();else if(r==='flashcards')flashcards();else if(r==='picker')picker();
   else if(r==='exams')examsHub();else if(r.startsWith('exam-')&&(r==='exam-final'||TRACKS.some(t=>'exam-'+t.id===r)))examView(r.slice(5));
-  else if(r==='checklist')checkPage('fw');else if(r==='path')checkPage('path');else home();
+  else if(r==='checklist')checkPage('fw');else if(r==='path')checkPage('path');
+  else if(r==='resources')resourcesPage();else if(r==='career')careerPage();else home();
   progress();markCurrent();app.classList.remove('nav-open');$('#menuBtn').setAttribute('aria-expanded','false');
 }
 window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);main.focus({preventScroll:true});});

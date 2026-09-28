@@ -391,3 +391,141 @@ const PIC=(()=>{const f='fill="var(--brand-soft)"';return{
  phone:`<rect x="18" y="4" width="28" height="56" rx="5" ${f}/><path d="M28 10h8"/><circle cx="32" cy="52" r="2" fill="currentColor"/>`,
 };})();
 const fcPic=k=>`<svg class="fc__pic" viewBox="0 0 64 64" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${PIC[k]||PIC.check}</svg>`;
+
+/* ================= v6: hands-on labs, cheat sheets and career prep ================= */
+SRC.pwdemo=['Playwright — TodoMVC demo app','https://demo.playwright.dev/todomvc'];
+SRC.cykitchen=['Cypress — Kitchen Sink example app','https://example.cypress.io'];
+SRC.tinternet=['The Internet — practice site for automation (Dave Haeffner)','https://the-internet.herokuapp.com'];
+
+/* ---------- hands-on labs, appended to the three flagship tool modules ---------- */
+M('playwright').sections.push(
+ S('Hands-on lab',`<p>Practise on Playwright’s own demo app, no setup beyond <code class="i">npm init playwright@latest</code>:</p>
+${OL(['Point your tests at <a href="https://demo.playwright.dev/todomvc" target="_blank" rel="noopener">demo.playwright.dev/todomvc</a>.','Write a test that adds three todos, marks one complete, and asserts the remaining count.','Write a second test that filters by “Active” and “Completed” and asserts the visible list each time.','Add a third test that reloads the page and asserts the todos survived (local storage).','Run with <code class="i">--ui</code> first to build it interactively, then headless in CI mode, and check the HTML report.'])}
+${CO('tip','Stretch goal','Push it to a public GitHub repo with a GitHub Actions workflow that runs on every push. That repo is portfolio material — see Career prep.')}`),
+);
+addSrc('playwright','pwdemo');
+
+M('cypress').sections.push(
+ S('Hands-on lab',`<p>Cypress ships its own practice app for this — no server to run:</p>
+${OL(['Scaffold with <code class="i">npm init cypress@latest</code> and point <code class="i">baseUrl</code> at <a href="https://example.cypress.io" target="_blank" rel="noopener">example.cypress.io</a>.','Write a test for the “Actions” page: type into a field with <code class="i">.type()</code>, and assert the value with <code class="i">.should(\'have.value\', ...)</code>.','Write a second test for the “Network Requests” page using <code class="i">cy.intercept()</code> to stub one request and assert the UI reacts.','Add a custom command (<code class="i">Cypress.Commands.add</code>) for a repeated step, and use it in both tests.'])}
+${CO('tip','Stretch goal','Open the Cypress Command Log while a test runs and step back through each command — this is the fastest way to build the habit of reading failures.')}`),
+);
+addSrc('cypress','cykitchen');
+
+M('selenium').sections.push(
+ S('Hands-on lab',`<p><a href="https://the-internet.herokuapp.com" target="_blank" rel="noopener">the-internet.herokuapp.com</a> is a long-standing, stable practice site built for exactly this:</p>
+${OL(['Automate the “Dynamic Loading” page: click start, use an explicit <code class="i">WebDriverWait</code> for the text to appear, then assert it.','Automate the “Multiple Windows” page: switch to the new window handle, assert its text, then switch back.','Automate a login on the “Form Authentication” page, including the negative case (wrong password shows a flash message).','Wrap the page in a small page object class with named methods, the way <a href="#framework-architecture">Framework architecture and POM</a> describes.'])}
+${CO('risk','Risk','Resist the urge to use <code class="i">Thread.sleep()</code> to make the dynamic-loading page pass. Use <code class="i">WebDriverWait</code> with <code class="i">ExpectedConditions</code> instead — that is the whole point of the exercise.')}`),
+);
+addSrc('selenium','tinternet');
+
+/* ---------- Resources & Career: helpers shared with the translated versions in i18n/<lang>-5.js ---------- */
+function esc0(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+const resLink=k=>`<li><a href="${SRC[k][1]}" target="_blank" rel="noopener">${esc0(SRC[k][0])}</a></li>`;
+const resGroup=(title,keys)=>`<div><h3>${title}</h3><ul>${keys.map(resLink).join('')}</ul></div>`;
+const carQa=(q,a)=>`<details class="faq"><summary>${q}</summary><p class="faq__a">${a}</p></details>`;
+const carCat=(title,items)=>`<div class="sec"><h3>${title}</h3><div class="faq-group">${items.map(([q,a])=>carQa(q,a)).join('')}</div></div>`;
+const carProject=(title,body,skills)=>`<div class="card"><h3 class="card__title">${title}</h3><p class="card__body">${body}</p><div class="card__foot">${skills.map(s=>`<span class="badge">${s}</span>`).join('')}</div></div>`;
+
+/* ---------- Resources: cheat sheets & curated links ---------- */
+const RESOURCES_HTML=(()=>{
+const link=resLink,group=resGroup;
+return `
+<section class="sec"><h2>Command cheat sheet</h2>
+<p>The same five actions, three tools. Enough to get a first test running while you look up the rest.</p>
+${T(['Action','Playwright','Cypress','Selenium (Java)'],[
+ ['Open a page','<code class="i">await page.goto(url)</code>','<code class="i">cy.visit(url)</code>','<code class="i">driver.get(url)</code>'],
+ ['Find & click','<code class="i">page.getByRole(\'button\',{name}).click()</code>','<code class="i">cy.get(sel).click()</code>','<code class="i">driver.findElement(by).click()</code>'],
+ ['Type text','<code class="i">locator.fill(value)</code>','<code class="i">cy.get(sel).type(value)</code>','<code class="i">element.sendKeys(value)</code>'],
+ ['Assert visible','<code class="i">await expect(locator).toBeVisible()</code>','<code class="i">cy.get(sel).should(\'be.visible\')</code>','<code class="i">wait.until(ExpectedConditions.visibilityOf(el))</code>'],
+ ['Assert text','<code class="i">await expect(locator).toHaveText(x)</code>','<code class="i">cy.get(sel).should(\'have.text\',x)</code>','<code class="i">assertEquals(x, el.getText())</code>'],
+ ['Count matches','<code class="i">await locator.count()</code>','<code class="i">cy.get(sel).its(\'length\')</code>','<code class="i">driver.findElements(by).size()</code>'],
+ ['Wait for it','Auto-waiting, built in','Auto-retrying assertions, built in','<code class="i">new WebDriverWait(driver, d)</code>'],
+ ['Stub the network','<code class="i">page.route(url, handler)</code>','<code class="i">cy.intercept(method, url)</code>','Not built in (needs a proxy library)'],
+ ['Screenshot','<code class="i">await page.screenshot({path})</code>','<code class="i">cy.screenshot()</code>','<code class="i">((TakesScreenshot)driver).getScreenshotAs(FILE)</code>'],
+ ['Run headless','Default','<code class="i">cypress run</code>','<code class="i">ChromeOptions().addArguments(\'--headless=new\')</code>'],
+])}
+<h3>Locator priority, quick version</h3>
+${OL(['A visible role and accessible name (<code class="i">getByRole</code> / ARIA role locators) — matches what a user perceives.','Label or placeholder text for form fields.','A dedicated test attribute (<code class="i">data-testid</code>, <code class="i">data-cy</code>) when there is no good accessible name.','A stable CSS selector as a last resort.','XPath, only when nothing else works — it breaks on layout changes and is the hardest to read back later.'])}
+${CO('note','Same idea, three tools','Playwright’s <code class="i">getByRole</code>, Cypress’s <code class="i">cy.get(\'[data-cy=...]\')</code> convention, and Selenium’s relative locators all exist to solve the same problem: find the element the way a person would, not by its position in the DOM.')}
+</section>
+<section class="sec"><h2>Curated official references</h2>
+<p>Bookmarks, not homework — the primary sources this hub itself was checked against.</p>
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+${group('Core tools',['pw','cy','se'])}
+${group('Beyond the big three',['wdio','robot','cucumber','appium','karate'])}
+${group('Visual & low-code',['katalon','apeyes'])}
+${group('AI & agents',['mcp','pwmcp','vibium','bidi'])}
+${group('Certification',['istqb','istqbc','bcs','atsqa'])}
+</div>
+</section>
+<section class="sec"><h2>Choosing a tool, condensed</h2>
+${T(['','Playwright','Cypress','Selenium'],[
+ ['Browsers','Chromium, Firefox, WebKit','Chromium-family, Firefox','Any, via WebDriver'],
+ ['Languages','JS/TS, Python, Java, .NET','JS/TS only','Java, C#, Python, JS, Ruby…'],
+ ['Best for','New web projects wanting speed and built-in tooling','Front-end teams wanting a fast local dev loop','Large, multi-language or legacy estates, mobile via Appium'],
+])}
+${CO('tip','Go deeper','The full comparison lives in <a href="#compare-tools">Comparing the three</a>; the interactive <a href="#picker">Tool picker</a> weighs your own constraints.')}</section>`;
+})();
+
+/* ---------- Career prep: interview bank, portfolio ideas, skills checklist ---------- */
+const CAREER_HTML=(()=>{
+const qa=carQa,cat=carCat,project=carProject;
+return `
+<section class="sec"><h2>Interview question bank</h2>
+<p>Not a script to memorise — use these to check you can explain the “why”, not just the “how”.</p>
+${cat('Foundations',[
+ ['What is the difference between testing and checking?','Checking confirms known, specified behaviour (what automation does well). Testing also investigates the unknown — exploring, questioning assumptions, judging whether the product is actually fit for purpose. Automation checks; people still test.'],
+ ['Why would you not automate everything?','Some checks (a one-off visual judgement, exploratory testing, usability) are cheaper or only possible manually. The test pyramid guides where automation pays back fastest: many fast unit checks, fewer API checks, fewer still slow, brittle end-to-end checks.'],
+ ['Explain the test pyramid and the “ice-cream cone” anti-pattern.','The pyramid favours many fast, isolated unit tests, a middle layer of API/integration tests, and a thin top layer of UI end-to-end tests. The ice-cream cone inverts this — mostly slow, flaky UI tests and few unit tests — which is slow to run and expensive to maintain.'],
+ ['What is a test double, and name two kinds.','A test double stands in for a real dependency. A <b>stub</b> returns canned answers; a <b>mock</b> additionally verifies it was called correctly. Others: dummy (never used, just fills a parameter), spy (records calls on a real object), fake (a working, lighter-weight implementation).'],
+ ['How do you decide what to automate first?','Risk-based: automate the checks that protect the highest-risk, highest-frequency, most stable flows first — where a regression is costly and the UI/API is unlikely to change under you every sprint.'],
+])}
+${cat('Tools & framework design',[
+ ['Why might a team choose Playwright over Selenium today?','Built-in parallelism, auto-waiting, tracing and cross-browser support (including WebKit) without assembling a Grid, plus a first-class test runner — at the cost of Selenium’s broader language and infrastructure ecosystem.'],
+ ['What problem does the Page Object Model solve?','It centralises locators and page interactions in one class per page or component, so a UI change is fixed in one place instead of every test that touches that element.'],
+ ['What is a flaky test, and how do you triage one?','A test that passes and fails without a code change. Triage: reproduce with repeats, check for timing/race conditions, shared state or environment issues, quarantine it out of the required gate while investigating, then fix the root cause rather than adding a longer wait.'],
+ ['How would you structure test data so tests can run in parallel?','Each test creates and owns its own data (via API setup, not the UI), uses unique identifiers to avoid collisions, and cleans up after itself even on failure — no test should depend on another test’s leftover state.'],
+ ['What would make you reject an AI-generated test in review?','A weak assertion that doesn’t check the actual requirement (e.g. “the page has a title”), a selector strategy the team doesn’t use, or a “fix” that silently loosens an assertion instead of investigating why it failed.'],
+])}
+${cat('CI/CD & quality strategy',[
+ ['What belongs in a CI quality gate for a pull request?','Fast, deterministic checks: unit tests, lint, a smoke subset of end-to-end tests, and secret scanning. Slower full regression suites usually run on a schedule or post-merge, not blocking every PR.'],
+ ['How do you measure whether automation is actually paying off?','Defect escape rate (bugs a test could have caught but didn’t), pass-on-retry (flaky) rate, time to feedback, and time to diagnose a failure — not raw test counts or coverage percentages alone, which are easy to game.'],
+ ['What is sharding, and why use it?','Splitting a test suite across multiple parallel workers or machines so a run that would take 40 minutes serially finishes in a few minutes wall-clock time.'],
+ ['How do you keep secrets out of a CI pipeline?','Environment-specific secrets stores (not committed files), a committed <code class="i">.env.example</code> with placeholders only, and secret-scanning as part of the pipeline itself.'],
+ ['A suite that was green yesterday is red today with no code changes. What do you check first?','External dependencies (third-party APIs, test data, environment/infra changes), then whether it is one flaky test or a systemic failure, before assuming the product regressed.'],
+])}
+${cat('Behavioural & scenario',[
+ ['Tell me about a time a test caught a real bug before release.','Describe the check, what it caught, and — importantly — why that check existed (what risk it targeted), not just that it passed.'],
+ ['Tell me about a flaky suite you inherited. What did you do?','Walk through triage, quarantine vs fix, and how you measured improvement (flaky rate dropping over time) rather than just “I fixed it”.'],
+ ['How do you push back when you’re asked to automate everything a manual tester does?','Explain the cost/benefit trade-off using the pyramid and risk-based prioritisation, and propose what you would automate first and what stays manual, with reasons.'],
+ ['How do you handle disagreement with a developer about whether something is a bug?','Focus on evidence (expected vs actual behaviour, requirement reference), stay curious about their reasoning, and escalate calmly with data if you still disagree.'],
+])}
+</section>
+<section class="sec"><h2>Portfolio project ideas</h2>
+<p>A public repo beats a bullet point. Pick one, keep the scope small enough to finish, and write a short README explaining your decisions.</p>
+<div class="grid">
+${project('API + UI regression suite','Build a small suite against a public demo app (the same ones in the Hands-on labs) covering both API and UI, with a page-object layer and a GitHub Actions workflow that shards the run.',['Framework design','CI/CD','API testing'])}
+${project('Cross-browser visual smoke suite','A Playwright suite that runs the same smoke checks across Chromium, Firefox and WebKit, with a free-tier visual comparison tool wired in for one key page.',['Cross-browser','Visual testing'])}
+${project('Flaky-test triage report','Run a small suite repeatedly in CI, collect the results, and write a short script or notebook that ranks tests by pass rate and flags the likely-flaky ones with evidence.',['Reliability','Reporting'])}
+${project('AI-assisted generation, reviewed','Use an AI test-generation feature (for example Playwright’s test agents) against a small open-source app, then write up what you accepted, what you rejected, and why — the review is the point.',['AI in testing','Review discipline'])}
+${project('Accessibility audit','Run automated accessibility checks (axe) across a real site’s key pages, triage the findings by severity, and write a short report distinguishing what a tool can catch from what needs a human check.',['Accessibility','Reporting'])}
+</div>
+</section>
+<section class="sec"><h2>Skills → job posting checklist</h2>
+<p>What a posting’s buzzwords actually mean, and where this hub covers each one.</p>
+${T(['You\'ll see…','It means…','Covered in'],[
+ ['Page Object Model / POM','Locators and actions organised into reusable page classes','<a href="#framework-architecture">Framework architecture and POM</a>'],
+ ['CI/CD pipelines','Tests running automatically on every push or pull request','<a href="#ci-cd">CI/CD and continuous testing</a>'],
+ ['API testing','Testing endpoints directly, not only through the UI','<a href="#api-testing">API testing</a>'],
+ ['Cross-browser testing','The same tests running on Chromium, Firefox and WebKit/Safari','<a href="#compare-tools">Comparing the three</a>'],
+ ['Flaky test management','Detecting, quarantining and fixing intermittently failing tests','<a href="#flaky-tests">Flaky tests and reliability</a>'],
+ ['Risk-based / shift-left testing','Prioritising what to automate by risk and cost of failure','<a href="#strategy-risk">Strategy and risk-based automation</a>'],
+ ['Accessibility testing (a11y)','Automated checks (e.g. axe) plus manual review','<a href="#security-performance">Security, privacy and performance</a>'],
+ ['AI-assisted / agentic testing','Using AI to generate, heal or review tests, with human oversight','<a href="#ai-test-automation">AI in test automation, hands-on</a>'],
+ ['Visual regression testing','Catching unintended UI changes with screenshot or Visual AI comparison','<a href="#applitools">Applitools and Visual AI</a>'],
+ ['ISTQB Foundation / CTFL','The standard entry-level testing certification','<a href="#istqb-ctfl">ISTQB CTFL</a>'],
+])}
+${CO('note','Using this responsibly','Being fluent in these terms and able to discuss trade-offs matters more than memorising definitions. If you use AI tools in an interview take-home, say so and be ready to explain what you reviewed and changed.')}
+</section>`;
+})();

@@ -41,6 +41,20 @@ add('selenium',
  ['Selenium e IA',`<p>Selenium no trae IA integrada, pero su ecosistema sí:</p>
 ${UL(['<b>Healenium</b>: una librería de código abierto que envuelve WebDriver y, cuando falla un locator, elige el elemento más parecido de la última ejecución correcta.','<b>Plataformas comerciales</b> (Katalon, Testim, Mabl y otras) añaden autorreparación y generación sobre una ejecución al estilo WebDriver.','<b>Vibium</b>: un proyecto nuevo del creador de Selenium, basado en WebDriver BiDi, para agentes de IA y personas. Tiene su propio módulo en este curso.'])}`]);
 
+/* ---------- v6: laboratorios prácticos, chuletas y preparación profesional ---------- */
+add('playwright',
+ ['Laboratorio práctico',`<p>Practica en la propia app de demostración de Playwright: solo necesitas <code class="i">npm init playwright@latest</code>:</p>
+${OL(['Apunta tus pruebas a <a href="https://demo.playwright.dev/todomvc" target="_blank" rel="noopener">demo.playwright.dev/todomvc</a>.','Escribe una prueba que añada tres tareas, marque una como completada y compruebe el número restante.','Escribe una segunda prueba que filtre por «Active» y «Completed» y compruebe la lista visible cada vez.','Añade una tercera prueba que recargue la página y compruebe que las tareas sobrevivieron (local storage).','Ejecuta primero con <code class="i">--ui</code> para construirla de forma interactiva, luego en modo headless de CI, y revisa el informe HTML.'])}
+${CO('tip','Reto adicional','Súbelo a un repositorio público de GitHub con un workflow de GitHub Actions que se ejecute en cada push. Ese repositorio es material de portafolio — mira «Preparación profesional».')}`]);
+add('cypress',
+ ['Laboratorio práctico',`<p>Cypress trae su propia app de práctica para esto — no hace falta levantar ningún servidor:</p>
+${OL(['Crea el proyecto con <code class="i">npm init cypress@latest</code> y pon <code class="i">baseUrl</code> apuntando a <a href="https://example.cypress.io" target="_blank" rel="noopener">example.cypress.io</a>.','Escribe una prueba para la página «Actions»: escribe en un campo con <code class="i">.type()</code> y comprueba el valor con <code class="i">.should(\'have.value\', ...)</code>.','Escribe una segunda prueba para la página «Network Requests» usando <code class="i">cy.intercept()</code> para simular una petición y comprobar que la UI reacciona.','Añade un comando propio (<code class="i">Cypress.Commands.add</code>) para un paso repetido y úsalo en las dos pruebas.'])}
+${CO('tip','Reto adicional','Abre el Command Log de Cypress mientras se ejecuta una prueba y recorre cada comando hacia atrás — es la forma más rápida de coger el hábito de leer los fallos.')}`]);
+add('selenium',
+ ['Laboratorio práctico',`<p><a href="https://the-internet.herokuapp.com" target="_blank" rel="noopener">the-internet.herokuapp.com</a> es un sitio de práctica estable y de larga trayectoria, creado justo para esto:</p>
+${OL(['Automatiza la página «Dynamic Loading»: pulsa iniciar, usa un <code class="i">WebDriverWait</code> explícito para esperar a que aparezca el texto y luego compruébalo.','Automatiza la página «Multiple Windows»: cambia al handle de la ventana nueva, comprueba su texto y luego vuelve a cambiar.','Automatiza un inicio de sesión en la página «Form Authentication», incluido el caso negativo (una contraseña incorrecta muestra un mensaje flash).','Envuelve la página en una pequeña clase page object con métodos con nombre, tal como describe <a href="#framework-architecture">Arquitectura del framework y POM</a>.'])}
+${CO('risk','Riesgo','Resiste la tentación de usar <code class="i">Thread.sleep()</code> para que pase la página de carga dinámica. Usa en su lugar <code class="i">WebDriverWait</code> con <code class="i">ExpectedConditions</code> — ese es justamente el sentido del ejercicio.')}`]);
+
 M['framework-landscape']={title:'Más allá de los tres grandes: otros frameworks',
  sum:'WebdriverIO, Robot Framework, Cucumber, Appium, Karate, Puppeteer y otros: para qué sirve cada uno y cuándo elegirlo.',
  sections:[
@@ -198,4 +212,99 @@ if(TR.es.tracks)TR.es.tracks.tools=['Las herramientas','Playwright, Cypress, Sel
  ['Appium','Un driver basado en WebDriver para apps nativas, híbridas y web móvil en iOS y Android.'],
  ['Gherkin','El lenguaje Given / When / Then de los escenarios de Cucumber, compartido con negocio.'],
 );
+
+TR.es.resourcesHtml=`
+<section class="sec"><h2>Chuleta de comandos</h2>
+<p>Las mismas cinco acciones, tres herramientas. Suficiente para tener una primera prueba funcionando mientras buscas el resto.</p>
+${T(['Acción','Playwright','Cypress','Selenium (Java)'],[
+ ['Abrir una página','<code class="i">await page.goto(url)</code>','<code class="i">cy.visit(url)</code>','<code class="i">driver.get(url)</code>'],
+ ['Buscar y hacer clic','<code class="i">page.getByRole(\'button\',{name}).click()</code>','<code class="i">cy.get(sel).click()</code>','<code class="i">driver.findElement(by).click()</code>'],
+ ['Escribir texto','<code class="i">locator.fill(value)</code>','<code class="i">cy.get(sel).type(value)</code>','<code class="i">element.sendKeys(value)</code>'],
+ ['Comprobar visibilidad','<code class="i">await expect(locator).toBeVisible()</code>','<code class="i">cy.get(sel).should(\'be.visible\')</code>','<code class="i">wait.until(ExpectedConditions.visibilityOf(el))</code>'],
+ ['Comprobar texto','<code class="i">await expect(locator).toHaveText(x)</code>','<code class="i">cy.get(sel).should(\'have.text\',x)</code>','<code class="i">assertEquals(x, el.getText())</code>'],
+ ['Contar coincidencias','<code class="i">await locator.count()</code>','<code class="i">cy.get(sel).its(\'length\')</code>','<code class="i">driver.findElements(by).size()</code>'],
+ ['Esperar','Espera automática, integrada','Aserciones con reintento automático, integradas','<code class="i">new WebDriverWait(driver, d)</code>'],
+ ['Simular la red','<code class="i">page.route(url, handler)</code>','<code class="i">cy.intercept(method, url)</code>','No integrado (necesita una librería proxy)'],
+ ['Captura de pantalla','<code class="i">await page.screenshot({path})</code>','<code class="i">cy.screenshot()</code>','<code class="i">((TakesScreenshot)driver).getScreenshotAs(FILE)</code>'],
+ ['Ejecutar en headless','Por defecto','<code class="i">cypress run</code>','<code class="i">ChromeOptions().addArguments(\'--headless=new\')</code>'],
+])}
+<h3>Prioridad de locators, versión rápida</h3>
+${OL(['Un rol visible y un nombre accesible (<code class="i">getByRole</code> / locators de rol ARIA) — coincide con lo que percibe una persona.','Texto de la etiqueta o del placeholder para campos de formulario.','Un atributo de prueba dedicado (<code class="i">data-testid</code>, <code class="i">data-cy</code>) cuando no hay un buen nombre accesible.','Un selector CSS estable como último recurso.','XPath, solo cuando nada más funciona: se rompe con los cambios de maquetación y es lo más difícil de releer después.'])}
+${CO('note','Misma idea, tres herramientas','La convención <code class="i">getByRole</code> de Playwright, la de <code class="i">cy.get(\'[data-cy=...]\')</code> de Cypress y los locators relativos de Selenium resuelven todos el mismo problema: encontrar el elemento como lo haría una persona, no por su posición en el DOM.')}
+</section>
+<section class="sec"><h2>Referencias oficiales seleccionadas</h2>
+<p>Marcadores, no deberes — las fuentes primarias con las que se verificó este propio curso.</p>
+<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+${resGroup('Herramientas principales',['pw','cy','se'])}
+${resGroup('Más allá de los tres grandes',['wdio','robot','cucumber','appium','karate'])}
+${resGroup('Visual y low-code',['katalon','apeyes'])}
+${resGroup('IA y agentes',['mcp','pwmcp','vibium','bidi'])}
+${resGroup('Certificación',['istqb','istqbc','bcs','atsqa'])}
+</div>
+</section>
+<section class="sec"><h2>Elegir herramienta, en resumen</h2>
+${T(['','Playwright','Cypress','Selenium'],[
+ ['Navegadores','Chromium, Firefox, WebKit','Familia Chromium, Firefox','Cualquiera, vía WebDriver'],
+ ['Lenguajes','JS/TS, Python, Java, .NET','Solo JS/TS','Java, C#, Python, JS, Ruby…'],
+ ['Mejor para','Proyectos web nuevos que quieren velocidad y herramientas integradas','Equipos de front-end que quieren un ciclo de desarrollo local rápido','Sistemas grandes, multilenguaje o heredados; móvil vía Appium'],
+])}
+${CO('tip','Profundiza más','La comparación completa está en «Comparar las tres»; el «Selector de herramientas» interactivo tiene en cuenta tus propias restricciones.')}</section>`;
+
+TR.es.careerHtml=`
+<section class="sec"><h2>Banco de preguntas de entrevista</h2>
+<p>No es un guion para memorizar — úsalas para comprobar que sabes explicar el «por qué», no solo el «cómo».</p>
+${carCat('Fundamentos',[
+ ['¿Cuál es la diferencia entre testing y checking?','El checking confirma un comportamiento conocido y especificado (lo que la automatización hace bien). El testing también investiga lo desconocido — explora, cuestiona supuestos, juzga si el producto realmente cumple su propósito. La automatización comprueba; las personas siguen probando.'],
+ ['¿Por qué no automatizarlo todo?','Algunas comprobaciones (un juicio visual puntual, las pruebas exploratorias, la usabilidad) son más baratas o solo posibles a mano. La pirámide de pruebas guía dónde la automatización se rentabiliza antes: muchas pruebas unitarias rápidas, menos pruebas de API, y todavía menos pruebas end-to-end lentas y frágiles.'],
+ ['Explica la pirámide de pruebas y el antipatrón del «cucurucho de helado».','La pirámide favorece muchas pruebas unitarias rápidas y aisladas, una capa intermedia de pruebas de API/integración y una capa superior delgada de pruebas E2E de UI. El «cucurucho de helado» lo invierte — sobre todo pruebas de UI lentas e inestables y pocas unitarias —, lo que es lento de ejecutar y caro de mantener.'],
+ ['¿Qué es un test double y nombra dos tipos.','Un test double sustituye a una dependencia real. Un <b>stub</b> devuelve respuestas preparadas; un <b>mock</b> además verifica que se llamó correctamente. Otros: dummy (nunca se usa, solo rellena un parámetro), spy (registra llamadas sobre un objeto real), fake (una implementación funcional pero más ligera).'],
+ ['¿Cómo decides qué automatizar primero?','Por riesgo: automatiza primero las comprobaciones que protegen los flujos de mayor riesgo, más frecuentes y más estables — donde una regresión sale cara y la UI/API difícilmente cambiará cada sprint.'],
+])}
+${carCat('Herramientas y diseño de frameworks',[
+ ['¿Por qué podría un equipo elegir hoy Playwright en vez de Selenium?','Paralelismo integrado, espera automática, tracing y soporte multi-navegador (incluido WebKit) sin montar un Grid, además de un runner de pruebas de primer nivel — a cambio del ecosistema más amplio de lenguajes e infraestructura de Selenium.'],
+ ['¿Qué problema resuelve el Page Object Model?','Centraliza los locators y las interacciones de página en una clase por página o componente, así un cambio de UI se arregla en un solo sitio en vez de en cada prueba que toca ese elemento.'],
+ ['¿Qué es una prueba flaky y cómo la triarías?','Una prueba que pasa y falla sin cambios en el código. Triaje: reprodúcela con repeticiones, comprueba condiciones de tiempo/carrera, estado compartido o problemas de entorno, ponla en cuarentena fuera del gate obligatorio mientras investigas, y luego arregla la causa raíz en vez de añadir una espera más larga.'],
+ ['¿Cómo estructurarías los datos de prueba para que las pruebas puedan ejecutarse en paralelo?','Cada prueba crea y es dueña de sus propios datos (mediante la API, no la UI), usa identificadores únicos para evitar colisiones, y limpia después de sí misma incluso si falla — ninguna prueba debería depender del estado que deja otra.'],
+ ['¿Qué te haría rechazar en revisión una prueba generada por IA?','Una aserción débil que no comprueba el requisito real (por ejemplo, «la página tiene un título»), una estrategia de selectores que el equipo no usa, o un «arreglo» que simplemente debilita una aserción en vez de investigar por qué falló.'],
+])}
+${carCat('CI/CD y estrategia de calidad',[
+ ['¿Qué debería incluir un quality gate de CI para un pull request?','Comprobaciones rápidas y deterministas: pruebas unitarias, lint, un subconjunto smoke de pruebas end-to-end y escaneo de secretos. Las suites de regresión completas y más lentas suelen ejecutarse por horario o tras el merge, sin bloquear cada PR.'],
+ ['¿Cómo mides si la automatización realmente compensa?','La tasa de fuga de defectos (bugs que una prueba podría haber cazado pero no cazó), la tasa de «verde al reintentar» (inestabilidad), el tiempo hasta obtener feedback y el tiempo para diagnosticar un fallo — no solo el número de pruebas o el porcentaje de cobertura, que son fáciles de manipular.'],
+ ['¿Qué es el sharding y para qué sirve?','Repartir una suite de pruebas entre varios workers o máquinas en paralelo, de modo que una ejecución que tardaría 40 minutos en serie termine en pocos minutos de reloj.'],
+ ['¿Cómo mantienes los secretos fuera de un pipeline de CI?','Almacenes de secretos específicos de cada entorno (no archivos con commit), un <code class="i">.env.example</code> con commit que solo tenga marcadores de posición, y escaneo de secretos como parte del propio pipeline.'],
+ ['Una suite que ayer estaba en verde hoy está en rojo sin cambios de código. ¿Qué compruebas primero?','Las dependencias externas (APIs de terceros, datos de prueba, cambios de entorno/infraestructura), y luego si es una única prueba flaky o un fallo sistémico, antes de asumir que el producto ha tenido una regresión.'],
+])}
+${carCat('Preguntas de comportamiento y escenarios',[
+ ['Cuéntame una vez que una prueba detectó un error real antes del lanzamiento.','Describe la comprobación, qué detectó y — esto es importante — por qué existía esa comprobación (qué riesgo cubría), no solo que pasó.'],
+ ['Cuéntame sobre una suite inestable que heredaste. ¿Qué hiciste?','Recorre el triaje, la decisión de cuarentena frente a arreglo, y cómo mediste la mejora (la tasa de inestabilidad bajando con el tiempo), no solo «lo arreglé».'],
+ ['¿Cómo respondes cuando te piden automatizar todo lo que hace un tester manual?','Explica el equilibrio coste/beneficio usando la pirámide y la priorización basada en riesgo, y propón qué automatizarías primero y qué se queda manual, con razones.'],
+ ['¿Cómo manejas un desacuerdo con un desarrollador sobre si algo es un error?','Céntrate en las evidencias (comportamiento esperado frente al real, referencia al requisito), mantén la curiosidad sobre su razonamiento, y escala con calma y con datos si seguís sin estar de acuerdo.'],
+])}
+</section>
+<section class="sec"><h2>Ideas de proyectos de portafolio</h2>
+<p>Un repositorio público vale más que una línea en el currículum. Elige uno, mantén el alcance lo bastante pequeño como para terminarlo, y escribe un README breve explicando tus decisiones.</p>
+<div class="grid">
+${carProject('Suite de regresión de API + UI','Construye una suite pequeña contra una app de demostración pública (las mismas de los laboratorios prácticos) que cubra tanto API como UI, con una capa de page objects y un workflow de GitHub Actions que reparta la ejecución con sharding.',['Diseño de framework','CI/CD','Pruebas de API'])}
+${carProject('Suite de humo visual multi-navegador','Una suite de Playwright que ejecuta las mismas comprobaciones smoke en Chromium, Firefox y WebKit, con una herramienta de comparación visual de nivel gratuito conectada para una página clave.',['Multi-navegador','Pruebas visuales'])}
+${carProject('Informe de triaje de pruebas flaky','Ejecuta una suite pequeña varias veces en CI, recopila los resultados y escribe un script o notebook breve que clasifique las pruebas por tasa de éxito y marque las probablemente flaky con evidencias.',['Fiabilidad','Informes'])}
+${carProject('Generación asistida por IA, revisada','Usa una función de generación de pruebas con IA (por ejemplo, los agentes de prueba de Playwright) sobre una pequeña app de código abierto, y luego escribe qué aceptaste, qué rechazaste y por qué — la revisión es el punto central.',['IA en testing','Disciplina de revisión'])}
+${carProject('Auditoría de accesibilidad','Ejecuta comprobaciones automáticas de accesibilidad (axe) en las páginas clave de un sitio real, triaja los hallazgos por gravedad, y escribe un informe breve que distinga lo que una herramienta puede detectar de lo que necesita revisión humana.',['Accesibilidad','Informes'])}
+</div>
+</section>
+<section class="sec"><h2>Lista de comprobación: habilidades → oferta de empleo</h2>
+<p>Lo que realmente significan las palabras de moda de una oferta y dónde lo cubre este curso.</p>
+${T(['Verás…','Significa…','Cubierto en'],[
+ ['Page Object Model / POM','Locators y acciones de página organizados en clases de página reutilizables','<a href="#framework-architecture">Arquitectura del framework y POM</a>'],
+ ['Pipelines de CI/CD','Pruebas que se ejecutan automáticamente en cada push o pull request','<a href="#ci-cd">CI/CD y pruebas continuas</a>'],
+ ['Pruebas de API','Probar los endpoints directamente, no solo a través de la UI','<a href="#api-testing">Pruebas de API</a>'],
+ ['Pruebas multi-navegador','Las mismas pruebas ejecutándose en Chromium, Firefox y WebKit/Safari','<a href="#compare-tools">Comparar las tres</a>'],
+ ['Gestión de pruebas flaky','Detectar, poner en cuarentena y arreglar pruebas que fallan de forma intermitente','<a href="#flaky-tests">Pruebas inestables y fiabilidad</a>'],
+ ['Pruebas basadas en riesgo / shift-left','Priorizar qué automatizar según el riesgo y el coste de un fallo','<a href="#strategy-risk">Estrategia y automatización basada en riesgos</a>'],
+ ['Pruebas de accesibilidad (a11y)','Comprobaciones automáticas (p. ej. axe) más revisión manual','<a href="#security-performance">Seguridad, privacidad y rendimiento</a>'],
+ ['Pruebas asistidas por IA / agénticas','Usar IA para generar, curar o revisar pruebas, con supervisión humana','<a href="#ai-test-automation">IA en la automatización de pruebas, en la práctica</a>'],
+ ['Pruebas de regresión visual','Detectar cambios de UI no intencionados comparando capturas o con Visual AI','<a href="#applitools">Applitools y Visual AI</a>'],
+ ['ISTQB Foundation / CTFL','La certificación estándar de nivel inicial en testing','<a href="#istqb-ctfl">Lo esencial de ISTQB CTFL</a>'],
+])}
+${CO('note','Usar esto con responsabilidad','Manejar con soltura estos términos y saber discutir sus compromisos importa más que memorizar definiciones. Si usas herramientas de IA en una prueba de entrevista para casa, dilo abiertamente y prepárate para explicar qué revisaste y qué cambiaste.')}
+</section>`;
 })();

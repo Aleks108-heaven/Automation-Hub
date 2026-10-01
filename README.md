@@ -96,6 +96,26 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
 - **Add new sections to the end of a module** (`M(id).sections.push(...)`). Translations then still line up, and the new section shows in English until it is translated.
 - **Regenerate the question bank** when questions change: `node tools/build-question-bank.js`.
 
+## Checks and CI
+
+```sh
+npm install        # once: installs Playwright for the browser test
+npm run check      # tokens in sync + translations match the English structure
+npm run build      # rebuild 1-learning-hub/automation-hub.html from source/
+npm test           # checks + a 30-point browser smoke test (accessibility, exam persistence, layout)
+```
+
+`.gitlab-ci.yml` runs the same things on every push and merge request: **tokens**, **translations**, **hub-build** (fails if the committed `automation-hub.html` is stale), then the **e2e** browser test. On the default branch a **pages** job publishes the hub at the Pages root and the design-system gallery under `/design-system/`.
+
+**Putting the repo on GitLab:** create an empty project on GitLab (no README), then
+
+```sh
+git remote add gitlab https://gitlab.com/<your-namespace>/automation-hub.git
+git push -u gitlab main
+```
+
+The pipeline starts by itself. Pages are served at `https://<your-namespace>.gitlab.io/automation-hub/` once the first `pages` job succeeds; check *Settings → General → Visibility → Pages* if the site should not be public. To keep GitHub as the source of truth, add a pull mirror under *Settings → Repository → Mirroring repositories* instead of pushing by hand.
+
 ## Troubleshooting
 
 | Problem | Fix |

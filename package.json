@@ -1,0 +1,21 @@
+{
+  "name": "automation-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Self-study hub for QA engineers, plus its design system. The hub is a generated single HTML file.",
+  "scripts": {
+    "build": "cd 1-learning-hub/source && sh build.sh",
+    "tokens": "node tools/build-tokens.js",
+    "check:tokens": "node tools/build-tokens.js --check",
+    "check:i18n": "node tools/check-i18n.js 1-learning-hub/source",
+    "check": "npm run check:tokens && npm run check:i18n",
+    "test:e2e": "node tests/e2e/smoke.js",
+    "test": "npm run check && npm run test:e2e"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

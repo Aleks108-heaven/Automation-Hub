@@ -93,7 +93,7 @@ ${P(0)}
  sum:'Framework end-to-end dla nowoczesnych aplikacji webowych: zintegrowany runner, asercje, izolacja, równoległość i narzędzia dla Chromium, Firefoksa i WebKit.',
  sections:[
   ['Czego się nauczysz',UL(['Tworzyć, uruchamiać i debugować projekt Playwright','Czytać każdą linię domyślnego playwright.config.ts','Wybierać lokatory w zalecanej kolejności','Strukturyzować test za pomocą bloków describe, hooków, kroków i tagów'])],
-  ['Czym jest',`<p>Playwright Test łączy runner testów, asercje web-first, izolację, zrównoleglenie i narzędzia. Uruchamia Chromium, WebKit i Firefox na Windows, Linux i macOS — w trybie headless lub z interfejsem — z emulacją urządzeń mobilnych.</p><p class="empty" style="font-size:14px">Najnowsza wersja w chwili pisania: Playwright 1.63.0 (4 września 2026). Sprawdź release notes, zanim skopiujesz przykłady zależne od wersji.</p>`],
+  ['Czym jest',`<p>Playwright Test łączy runner testów, asercje web-first, izolację, zrównoleglenie i narzędzia. Uruchamia Chromium, WebKit i Firefox na Windows, Linux i macOS — w trybie headless lub z interfejsem — z emulacją urządzeń mobilnych.</p><p class="empty empty--md">Najnowsza wersja w chwili pisania: Playwright 1.63.0 (4 września 2026). Sprawdź release notes, zanim skopiujesz przykłady zależne od wersji.</p>`],
   ['Instalacja i uruchamianie',`${P(0)}
 <p>Wygenerowany szkielet: <code class="i">playwright.config.ts</code>, <code class="i">package.json</code>, <code class="i">tests/example.spec.ts</code>.</p>`],
   ['Kluczowe pojęcia',T(['Pojęcie','Dlaczego ważne'],[

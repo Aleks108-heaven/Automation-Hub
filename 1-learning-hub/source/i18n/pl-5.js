@@ -236,7 +236,7 @@ ${CO('note','Ta sama idea, trzy narzędzia','Konwencja <code class="i">getByRole
 </section>
 <section class="sec"><h2>Wyselekcjonowane oficjalne źródła</h2>
 <p>Zakładki, nie zadanie domowe — podstawowe źródła, z którymi zweryfikowano ten kurs.</p>
-<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+<div class="grid grid--wide">
 ${resGroup('Podstawowe narzędzia',['pw','cy','se'])}
 ${resGroup('Poza wielką trójką',['wdio','robot','cucumber','appium','karate'])}
 ${resGroup('Wizualne i low-code',['katalon','apeyes'])}

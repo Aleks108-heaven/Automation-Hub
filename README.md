@@ -81,7 +81,7 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
 | Buttons, labels and messages (all languages) | `UI.en`, `UI.uk`, `UI.pl`, `UI.es` in `i18n.js` |
 | Translated module content | `i18n/<lang>-1.js` (Foundations, Tools), `-2` (Framework), `-3` (Quality, AI, Certification), `-4` (tracks, glossary, checklist, study path, exam bank), `-5` (the September 2026 additions) |
 | Final exam mix, pass mark, timer | `FINAL` in `app.js` |
-| Colours, spacing, fonts | `part1.html` (mirrors `2-design-system/tokens.css`) |
+| Colours, spacing, fonts, motion | `2-design-system/tokens.json`, then run `node tools/build-tokens.js` (the token block in `part1.html` is generated; layout and component CSS stay in `part1.html`) |
 
 **Rules that keep things working:**
 
@@ -114,10 +114,17 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
 | `1-learning-hub/source/` | Editable sources: `part1.html` (styles and layout), `data.js` / `data2.js` / `data3.js` / `data4.js` / `data5.js` (English content, quizzes, exam bank, cheat sheets and career prep; `data4.js` adds the objectives, the deeper sections, the four new framework modules and the extra questions, `data5.js` adds the newest tool modules, hands-on labs, and the cheat-sheets/career pages), `i18n.js` (language switching and interface text in all four languages), `i18n/uk-*.js`, `i18n/pl-*.js`, `i18n/es-*.js` (translated content), `app.js` (app logic and exams). When you change English content, update the matching translation files too. Anything that no longer matches falls back to English. Run `build.sh` to rebuild the HTML after editing. |
 | `2-design-system/` | The Automation Hub design system. `README.md` is the brand book. `tokens.json` / `tokens.css` hold the colours for light and dark themes, plus type, spacing and radius. `components/` has 13 components, each with a guide and a preview, and `components/bundle.css` has their styles. Open **`components-gallery.html`** to see every component live, with a light/dark toggle. |
 | `3-source-documents/` | Your two original documents: the Test Automation study guide (.docx) and the AI Testing research overview (.md). |
-| `tools/` | `check-i18n.js`: checks that every translation matches the English structure and lists what is still in English. `build-question-bank.js`: rewrites `question-bank.md` from the sources. |
+| `tools/` | `build-tokens.js`: regenerates every copy of the design tokens from `tokens.json` (`--check` to detect drift). `check-i18n.js`: checks that every translation matches the English structure and lists what is still in English. `build-question-bank.js`: rewrites `question-bank.md` from the sources. |
 | `4-research-and-sources/` | `research-and-sources.md` lists every source per module, the corrections made during research, and the items to double-check. `question-bank.md` has all quiz and exam questions with answers and explanations, for revising offline. |
 
-## What's new (28 September 2026)
+## What's new (1 October 2026): design and accessibility pass
+
+- **Accessibility.** Skip link and a page-specific title on every view. The mobile menu is `inert` while closed (it used to be tabbable off-screen) and the page behind it is `inert` while open; Escape closes it and returns focus to **Menu**. Quiz answers move focus to their explanation. Exam answer groups are labelled, are a single tab stop, and move with the arrow keys. The low-time timer now shows a "!" and is announced at 5 and 1 minute, and the auto-submit is announced. Touch targets grow to 44px on touch screens, and `prefers-contrast` and forced-colors modes are handled.
+- **A running exam survives a reload** (stored per tab in `sessionStorage`, validated on load, cleared when the exam finishes).
+- **One source for the design tokens.** `2-design-system/tokens.json` now generates `tokens.css`, the hub's token block and the gallery, via `node tools/build-tokens.js` (`--check` fails on drift). This also fixes the missing `--shadow-raised` in `tokens.css` and the gallery. Motion, z-index and breakpoint tokens were added, and the type scale in the JSON now matches what the hub renders.
+- **No more inline styles** in the hub's views or content (replaced by utility classes), and the design-system docs now cover flashcard illustrations and the accessibility rules.
+
+## Earlier (28 September 2026)
 
 - **Two new practice pages.** **Cheat sheets** — a side-by-side Playwright/Cypress/Selenium command reference, a locator-priority quick list, and curated official links grouped by topic. **Career prep** — a 19-question interview bank (foundations, tools & framework design, CI/CD & strategy, behavioural), five portfolio project ideas, and a skills-to-job-posting checklist that links each buzzword back to the module that covers it.
 - **Hands-on labs.** The Playwright, Cypress and Selenium modules each gained a step-by-step practical exercise against a real, stable practice site (Playwright's own TodoMVC demo, Cypress's Kitchen Sink app, and *the-internet.herokuapp.com*).

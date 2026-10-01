@@ -451,7 +451,7 @@ ${CO('note','Same idea, three tools','Playwright’s <code class="i">getByRole</
 </section>
 <section class="sec"><h2>Curated official references</h2>
 <p>Bookmarks, not homework — the primary sources this hub itself was checked against.</p>
-<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+<div class="grid grid--wide">
 ${group('Core tools',['pw','cy','se'])}
 ${group('Beyond the big three',['wdio','robot','cucumber','appium','karate'])}
 ${group('Visual & low-code',['katalon','apeyes'])}

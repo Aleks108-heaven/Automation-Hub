@@ -29,7 +29,9 @@ Automation Hub is a study space for QA engineers learning test automation (Playw
 
 ## Iconography
 
-No icon library. Status uses text glyphs inside badges (✓ pass, ✕ fail, ~ flaky, – skip); navigation uses module numbers in `label` mono ("06"). No logos, illustrations or emoji — the name is set in plain type.
+No icon library. Status uses text glyphs inside badges (✓ pass, ✕ fail, ~ flaky, – skip, ! low time); navigation uses module numbers in `label` mono ("06"). No logos, photos or emoji — the name is set in plain type.
+
+The one exception is the flashcard picture: a small inline-SVG line diagram (test pyramid, locator target, flaky signal) drawn in `currentColor` with no fills of its own, so it follows the theme. 88px on the front of a card, 48px on the back. Illustrations explain a concept; they are never decoration.
 
 ## Components
 
@@ -39,7 +41,26 @@ No icon library. Status uses text glyphs inside badges (✓ pass, ✕ fail, ~ fl
 - **Forms:** `Checklist`.
 - **Learning:** `QuizQuestion` (single and Select TWO; picked / right / wrong states), `Flashcard`, `ExamBar` (sticky timer and progress), `ExamResult` (score, verdict, per-track breakdown).
 
-All are CSS classes prefixed `ah-` in `components/bundle.css`; use them on plain HTML.
+All are CSS classes prefixed `ah-` in `components/bundle.css`; use them on plain HTML. The hub (`part1.html`) implements the same components without the prefix (`.btn`, `.card`, `.callout`, `.opt` …). The rules, tokens and states are identical; when you change a component, change both.
+
+## Tokens and how they stay in sync
+
+`tokens.json` is the single source of truth: colour (light and dark), type, spacing, radius, motion, z-index, breakpoints and shadow. `tokens.css`, the token block in the hub's `part1.html` and the gallery's style block are all **generated** from it:
+
+```sh
+node tools/build-tokens.js           # regenerate every copy
+node tools/build-tokens.js --check   # fail if any copy has drifted (use in CI)
+```
+
+Never edit a generated token block by hand. Breakpoints are documented tokens but are written literally in media queries, because CSS cannot read custom properties there.
+
+## Accessibility rules the system enforces
+
+- Status is never colour alone: every state carries a word or glyph (the exam timer shows "!" under five minutes and is announced at 5 and 1 minute).
+- Interactive controls reach 3:1 (`line-strong`); text reaches 4.5:1 in both themes; touch targets grow to 44px on coarse pointers.
+- The mobile drawer is `inert` while closed and the page behind it is `inert` while open. Every page has a skip link and a page-specific title.
+- `prefers-reduced-motion`, `prefers-contrast: more` and `forced-colors` are honoured.
+- Radio-style answer groups are a single tab stop and move with the arrow keys.
 
 ## Learning patterns
 

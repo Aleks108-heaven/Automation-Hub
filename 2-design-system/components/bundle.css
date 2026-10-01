@@ -99,6 +99,8 @@ a.ah-card:hover,button.ah-card:hover{box-shadow:var(--shadow-raised);border-colo
 .ah-fc__face--back{transform:rotateY(180deg);background:var(--brand-soft);border-color:transparent}
 .ah-fc__term{font-size:26px;line-height:32px;font-weight:600}
 .ah-fc__def{font-size:16px;line-height:25px}
+.ah-fc__pic{width:88px;height:88px;color:var(--brand);flex:none}
+.ah-fc__pic--sm{width:48px;height:48px}
 @media (prefers-reduced-motion:reduce){.ah-fc__inner{transition:none}}
 
 /* FilterChip */

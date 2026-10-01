@@ -236,7 +236,7 @@ ${CO('note','Misma idea, tres herramientas','La convención <code class="i">getB
 </section>
 <section class="sec"><h2>Referencias oficiales seleccionadas</h2>
 <p>Marcadores, no deberes — las fuentes primarias con las que se verificó este propio curso.</p>
-<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+<div class="grid grid--wide">
 ${resGroup('Herramientas principales',['pw','cy','se'])}
 ${resGroup('Más allá de los tres grandes',['wdio','robot','cucumber','appium','karate'])}
 ${resGroup('Visual y low-code',['katalon','apeyes'])}

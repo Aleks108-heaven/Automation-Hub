@@ -20,6 +20,8 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}};
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const main=$('#main'),app=$('#app');
+/* polite live-region announcement; clearing first makes repeated messages speak again */
+const say=m=>{const l=$('#live');if(!l)return;l.textContent='';setTimeout(()=>{l.textContent=m;},50);};
 const trackName=id=>TRACKS.find(t=>t.id===id).name;
 const idx=id=>MODULES.findIndex(m=>m.id===id);
 const num=i=>String(i+1).padStart(2,'0');
@@ -42,6 +44,7 @@ function applyShell(){
  set('#search',e=>{e.placeholder=t('searchPh');e.setAttribute('aria-label',t('searchPh'));});
  set('#resetBtn',e=>e.textContent=t('resetProgress'));
  set('#menuBtn',e=>e.textContent=t('menu'));
+ set('#skip',e=>e.textContent=t('skipLink'));
  set('.side__foot',e=>{const old=e.querySelector('.lang');if(old)old.remove();
   const l=document.createElement('label');l.className='lang';
   l.innerHTML=`<span class="label">${t('language')}</span><select id="langSel">${LANGS.map(([c,n])=>`<option value="${c}" lang="${c}" ${c===LANG?'selected':''}>${n}</option>`).join('')}</select>`;
@@ -66,7 +69,7 @@ function renderToc(filter=''){
     if(!ms.length)return;any=true;
     h+=`<div class="toc__group"><span class="label">${esc(tk.name)}</span>${ms.map(([m,i])=>`<a href="#${m.id}" data-r="${m.id}"><span class="n">${num(i)}</span><span class="t">${esc(m.title)}</span>${st.done[m.id]?`<span class="d" aria-label="${t('doneAria')}">✓</span>`:''}</a>`).join('')}</div>`;
   });
-  if(f&&!any)h+='<p class="empty" style="padding:0 8px">'+esc(t('noMatch',filter))+'</p>';
+  if(f&&!any)h+='<p class="empty empty--pad">'+esc(t('noMatch',filter))+'</p>';
   if(!f)h+=`<div class="toc__group"><span class="label">${t('practice')}</span>${practice().map(p=>`<a href="#${p.id}" data-r="${p.id}"><span class="n">→</span><span class="t">${p.title}</span></a>`).join('')}</div>`;
   $('#toc').innerHTML=h;markCurrent();
 }
@@ -90,10 +93,10 @@ function home(){
   main.innerHTML=`<div class="wrap">
   <section class="hero">
     <div><span class="label">${t('heroLabel')}</span>
-      <h1 style="margin-top:12px">${t('heroTitle')}</h1>
+      <h1>${t('heroTitle')}</h1>
       <p class="lede">${t('heroLede',MODULES.length,(Math.round(mins/60*10)/10).toLocaleString(LANG))}</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:24px">${next?`<a class="btn btn--primary" href="#${next.id}">${d?t('cont'):t('start')}: ${esc(next.title)}</a>`:`<a class="btn btn--primary" href="#quiz">${t('allDone')}</a>`}<a class="btn btn--secondary" href="#exams">${t('takeExam')}</a></div>
-      ${remain?`<p class="empty mono tnum" style="margin-top:12px;font-size:13px">${t('timeLeft',remain)}</p>`:''}
+      <div class="actions">${next?`<a class="btn btn--primary" href="#${next.id}">${d?t('cont'):t('start')}: ${esc(next.title)}</a>`:`<a class="btn btn--primary" href="#quiz">${t('allDone')}</a>`}<a class="btn btn--secondary" href="#exams">${t('takeExam')}</a></div>
+      ${remain?`<p class="empty empty--sm mono tnum">${t('timeLeft',remain)}</p>`:''}
     </div>
     <div class="runlog" aria-hidden="true">
       <div class="row mu">$ npx playwright test</div>
@@ -103,16 +106,16 @@ function home(){
     </div>
   </section>
   <section class="stats" aria-label="${t('statsAria')}">
-    <div class="stat"><b>${d}<span style="font-size:16px;color:var(--ink-muted)"> / ${MODULES.length}</span></b><span>${t('statModules')}</span></div>
-    <div class="stat"><b>${correct}<span style="font-size:16px;color:var(--ink-muted)"> / ${answered}</span></b><span>${t('statQuiz')}</span></div>
-    <div class="stat"><b>${Object.values(st.fw).filter(Boolean).length}<span style="font-size:16px;color:var(--ink-muted)"> / ${FRAMEWORK_CHECKS.length}</span></b><span>${t('statFw')}</span></div>
+    <div class="stat"><b>${d}<span class="of"> / ${MODULES.length}</span></b><span>${t('statModules')}</span></div>
+    <div class="stat"><b>${correct}<span class="of"> / ${answered}</span></b><span>${t('statQuiz')}</span></div>
+    <div class="stat"><b>${Object.values(st.fw).filter(Boolean).length}<span class="of"> / ${FRAMEWORK_CHECKS.length}</span></b><span>${t('statFw')}</span></div>
   </section>
   ${TRACKS.map(tk=>{const ms=MODULES.map((m,i)=>[m,i]).filter(([m])=>m.track===tk.id);const dn=ms.filter(([m])=>st.done[m.id]).length;
    return `<section class="track"><div class="track__head"><div><h2>${esc(tk.name)}</h2><p>${esc(tk.blurb)}</p></div><span class="badge ${dn===ms.length?'badge--pass':''}">${dn===ms.length?'✓ ':''}${dn}/${ms.length}</span></div><div class="grid">${ms.map(([m,i])=>card(m,i)).join('')}</div></section>`}).join('')}
   <section class="track"><div class="track__head"><div><h2>${t('practice')}</h2><p>${t('practiceBlurb')}</p></div></div>
    <div class="practice">${practice().map(p=>`<a class="card" href="#${p.id}"><h3 class="card__title">${p.title}</h3><p class="card__body">${p.body}</p></a>`).join('')}</div></section>
   ${CO('note',t('takeawayLabel'),t('takeaway'))}
-  <p class="empty" style="font-size:13px">${t('footnote')}</p>
+  <p class="empty empty--sm">${t('footnote')}</p>
   </div>`;
 }
 function quizHTML(qs,keyFn){
@@ -143,7 +146,7 @@ function module(id){
 function bindQuiz(qs,keyFn,rerender,keepScroll){
   main.querySelectorAll('.q').forEach((el,k)=>el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
     st.ans[el.dataset.key]=+b.dataset.j;save();const y=window.scrollY;rerender();if(keepScroll)window.scrollTo(0,y);
-    const again=main.querySelector(`.q[data-key="${el.dataset.key}"] .q__why`);if(again)again.setAttribute('tabindex','-1');
+    const again=main.querySelector(`.q[data-key="${el.dataset.key}"] .q__why`);if(again){again.setAttribute('tabindex','-1');again.focus({preventScroll:true});}
   }));
 }
 let mixed=null;
@@ -158,7 +161,8 @@ function mixedQuiz(fresh){
    <div class="done-row"><span class="mono tnum">${done===it.length?`${t('score',score,it.length)} ${score>=8?`<span class="badge badge--pass">${t('pass')}</span>`:score>=5?`<span class="badge badge--flaky">${t('reviewB')}</span>`:`<span class="badge badge--fail">${t('revisitB')}</span>`}`:t('answered',done,it.length)}</span>
    <button class="btn btn--primary" id="newQ" type="button">${t('newQ')}</button></div>
    ${done===it.length&&score<it.length?`<div class="sec"><h2>${t('revisit')}</h2><ul>${[...new Set(it.filter((x,k)=>mixed.ans[k]!==x.q.a).map(x=>x.m.id))].map(id=>{const m=MODULES[idx(id)];return `<li><a href="#${id}">${esc(m.title)}</a></li>`}).join('')}</ul></div>`:''}</div>`;
-  main.querySelectorAll('.q').forEach((el,k)=>el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{mixed.ans[k]=+b.dataset.j;const y=scrollY;mixedQuiz();scrollTo(0,y);}));
+  main.querySelectorAll('.q').forEach((el,k)=>el.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{mixed.ans[k]=+b.dataset.j;const y=scrollY;mixedQuiz();scrollTo(0,y);
+    const why=main.querySelector(`.q[data-key="${k}"] .q__why`);if(why){why.setAttribute('tabindex','-1');why.focus({preventScroll:true});}}));
   $('#newQ').onclick=()=>{mixedQuiz(true);scrollTo(0,0)};
 }
 let fc={track:'all',order:null,i:0,flipped:false};
@@ -170,8 +174,8 @@ function flashcards(){
   <div class="chips" role="group" aria-label="${t('filterAria')}"><button class="chip" data-t="all" aria-pressed="${fc.track==='all'}">${t('all')}</button>${TRACKS.map(tk=>`<button class="chip" data-t="${tk.id}" aria-pressed="${fc.track===tk.id}">${esc(tk.name)}</button>`).join('')}</div>
   <div class="fc-wrap">
    <button class="fc ${fc.flipped?'flipped':''}" id="card" type="button" aria-label="${esc(t('fcAria',g[0],fc.flipped?g[1]:''))}"><div class="fc__inner">
-    <div class="fc__face">${fcPic(g[3])}<span class="label">${esc(trackName(g[2]))}</span><span class="fc__term">${esc(g[0])}</span><span class="empty" style="font-size:13px">${t('tapReveal')}</span></div>
-    <div class="fc__face fc__face--back">${fcPic(g[3]).replace('fc__pic','fc__pic fc__pic--sm')}<span class="label" style="color:var(--brand)">${esc(g[0])}</span><span class="fc__def">${esc(g[1])}</span></div></div></button>
+    <div class="fc__face">${fcPic(g[3])}<span class="label">${esc(trackName(g[2]))}</span><span class="fc__term">${esc(g[0])}</span><span class="empty empty--sm">${t('tapReveal')}</span></div>
+    <div class="fc__face fc__face--back">${fcPic(g[3]).replace('fc__pic','fc__pic fc__pic--sm')}<span class="label label--brand">${esc(g[0])}</span><span class="fc__def">${esc(g[1])}</span></div></div></button>
    <div class="fc-ctrl"><button class="btn btn--secondary" id="prev" type="button">${t('prevBtn')}</button><span class="mono tnum">${fc.i+1} / ${list.length}</span><button class="btn btn--secondary" id="next" type="button">${t('nextBtn')}</button></div>
    <div><button class="btn btn--ghost" id="shuf" type="button">${t('shuffle')}</button></div></div></div>`;
   const go=d=>{fc.i=(fc.i+d+list.length)%list.length;fc.flipped=false;flashcards();$('#card').focus();};
@@ -187,8 +191,8 @@ function checkPage(kind){
   const title=kind==='fw'?t('prFw'):t('prPath');
   const sum=kind==='fw'?t('fwSum'):t('pathSum');
   main.innerHTML=`<div class="wrap"><header class="mod-head"><span class="label">${t('practice')}</span><h1>${title}</h1><p class="sum">${sum}</p></header>
-   <div style="display:flex;flex-direction:column;gap:8px;max-width:560px"><div style="display:flex;justify-content:space-between"><span class="label">${t('completed')}</span><span class="mono tnum">${n} / ${items.length}</span></div><div class="bar"><span style="width:${n/items.length*100}%"></span></div></div>
-   <ul class="checklist">${items.map((t,i)=>`<li><label class="check"><input type="checkbox" id="${kind}-${i}" data-i="${i}" ${store[i]?'checked':''}><span>${kind==='path'?`<span class="mono" style="color:var(--ink-muted);margin-right:8px">${num(i)}</span>`:''}${esc(t)}</span></label></li>`).join('')}</ul>
+   <div class="meter-block"><div class="row-between"><span class="label">${t('completed')}</span><span class="mono tnum">${n} / ${items.length}</span></div><div class="bar"><span style="width:${n/items.length*100}%"></span></div></div>
+   <ul class="checklist">${items.map((t,i)=>`<li><label class="check"><input type="checkbox" id="${kind}-${i}" data-i="${i}" ${store[i]?'checked':''}><span>${kind==='path'?`<span class="mono idx">${num(i)}</span>`:''}${esc(t)}</span></label></li>`).join('')}</ul>
    ${kind==='fw'?CO('tip',t('tip'),t('fwTip')):''}</div>`;
   main.querySelectorAll('input[type=checkbox]').forEach(c=>c.onchange=()=>{store[c.dataset.i]=c.checked;save();const y=scrollY;checkPage(kind);scrollTo(0,y);const el=document.getElementById(c.id);el&&el.focus();});
 }
@@ -218,8 +222,8 @@ function picker(){
   if(answered===PK.length){
     const sc={pw:0,cy:0,se:0};PK.forEach(p=>{const w=p.o[st.pk[p.id]][1];for(const k in w)sc[k]+=w[k]});
     const max=Math.max(...Object.values(sc)),ranked=Object.keys(sc).sort((a,b)=>sc[b]-sc[a]);
-    res=`<section class="sec"><h2>${t('pkResult')}</h2><div class="pk-res">${ranked.map((k,r)=>`<div class="card ${r===0?'top':''}"><div style="display:flex;justify-content:space-between;align-items:center"><h3 class="card__title">${TOOLS[k].n}</h3>${r===0?`<span class="badge badge--brand">${t('bestFit')}</span>`:''}</div>
-     <div class="meter" aria-label="${t('meterAria',sc[k],max)}"><span style="width:${sc[k]/max*100}%"></span></div><span class="mono tnum" style="font-size:13px;color:var(--ink-muted)">${t('pts',sc[k])}</span><ul>${TOOLS[k].why.map(w=>`<li>${w}</li>`).join('')}</ul><p class="card__body"><b style="color:var(--ink)">${t('watchOut')}</b> ${TOOLS[k].watch}</p></div>`).join('')}</div>
+    res=`<section class="sec"><h2>${t('pkResult')}</h2><div class="pk-res">${ranked.map((k,r)=>`<div class="card ${r===0?'top':''}"><div class="row-between"><h3 class="card__title">${TOOLS[k].n}</h3>${r===0?`<span class="badge badge--brand">${t('bestFit')}</span>`:''}</div>
+     <div class="meter" aria-label="${t('meterAria',sc[k],max)}"><span style="width:${sc[k]/max*100}%"></span></div><span class="mono tnum pts">${t('pts',sc[k])}</span><ul>${TOOLS[k].why.map(w=>`<li>${w}</li>`).join('')}</ul><p class="card__body"><b>${t('watchOut')}</b> ${TOOLS[k].watch}</p></div>`).join('')}</div>
      ${CO('note',t('pkNoteLabel'),t('pkNote'))}</section>`;
   }
   main.innerHTML=`<div class="wrap"><header class="mod-head"><span class="label">${t('practice')}</span><h1>${t('prPick')}</h1><p class="sum">${t('pkSum')}</p></header>
@@ -245,11 +249,32 @@ let exam=null,timerId=null;
 const isMulti=q=>Array.isArray(q.a);
 const correct=(q,ans)=>{if(ans===undefined)return false;if(isMulti(q)){const a=[...q.a].sort().join(),b=[...(ans||[])].sort().join();return a===b;}return ans===q.a;};
 const fmt=s=>{s=Math.max(0,Math.round(s));return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;};
+/* a running exam survives a reload (per tab); stored data is untrusted, so it is validated like the main progress */
+const EXKEY='automation-hub.exam.v1';
+function saveExam(){try{if(exam&&!exam.done)sessionStorage.setItem(EXKEY,JSON.stringify(exam));else sessionStorage.removeItem(EXKEY);}catch(e){}}
+function loadExam(){
+  try{
+    const d=JSON.parse(sessionStorage.getItem(EXKEY)||'null'),ids=TRACKS.map(x=>x.id);
+    const int=x=>Number.isInteger(x)&&x>=0&&x<100,num=x=>typeof x==='number'&&isFinite(x);
+    const okItem=x=>x&&typeof x.q==='string'&&x.q&&typeof x.why==='string'&&Array.isArray(x.o)&&x.o.length>1&&x.o.every(s=>typeof s==='string')
+      &&ids.includes(x.t)&&(x.mod==null||MODULES.some(m=>m.id===x.mod))&&(x.k==null||[1,2,3].includes(x.k))
+      &&(Array.isArray(x.a)?x.a.length>0&&x.a.every(j=>int(j)&&j<x.o.length):int(x.a)&&x.a<x.o.length);
+    if(!d||d.done||!(d.kind==='final'||ids.includes(d.kind))||!Array.isArray(d.items)||!d.items.length||d.items.length>FINAL.n||!d.items.every(okItem))return null;
+    if(!num(d.start)||(d.kind==='final'?!num(d.deadline):d.deadline!=null))return null;
+    const n=d.items.length,obj=v=>v&&typeof v==='object'&&!Array.isArray(v)?v:{};
+    const keyOk=k=>int(+k)&&+k<n;
+    const ans=Object.fromEntries(Object.entries(obj(d.ans)).filter(([k,v])=>keyOk(k)&&(int(v)||(Array.isArray(v)&&v.every(int)))));
+    const flag=Object.fromEntries(Object.entries(obj(d.flag)).filter(([k,v])=>keyOk(k)&&v===true));
+    return {kind:d.kind,items:d.items,ans,flag,start:d.start,deadline:d.deadline??null,done:false,confirm:false,filter:'wrong'};
+  }catch(e){return null;}
+}
+exam=loadExam();
 function startExam(kind){
   let items;
   if(kind==='final'){items=[];for(const t in FINAL.quota)items.push(...shuffle(pool(t)).slice(0,FINAL.quota[t]));items=shuffle(items);}
   else items=shuffle(pool(kind)).slice(0,TRACK_EXAM_N);
   exam={kind,items,ans:{},flag:{},start:Date.now(),deadline:kind==='final'?Date.now()+FINAL.mins*60000:null,done:false,confirm:false,filter:'wrong'};
+  saveExam();
   const h='exam-'+kind;if(route()===h)render();else location.hash=h;
 }
 function examTitle(kind){return kind==='final'?t('finalExam'):t('trackExam',trackName(kind));}
@@ -262,7 +287,7 @@ function examGuide(){
   return `<section class="sec"><h2>${t('howTitle')}</h2>
    <p>${t('howP')}</p>
    ${tb}
-   <p class="empty" style="font-size:14px">${t('kNote')}</p>
+   <p class="empty empty--md">${t('kNote')}</p>
    <h3>${t('qvsE')}</h3>
    <div class="tbl"><table>${th(t('qvsETh'))}<tbody>${qr.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
    <h3>${t('scoringTitle')}</h3>
@@ -280,7 +305,7 @@ function examsHub(){
    <section class="track"><div class="track__head"><div><h2>${t('perTrack')}</h2><p>${t('perTrackP',TRACK_EXAM_N)}</p></div></div>
    <div class="grid">${TRACKS.map(tk=>tile(tk.id,esc(tk.blurb),t('tileMeta',Math.min(TRACK_EXAM_N,pool(tk.id).length),pool(tk.id).length))).join('')}</div></section>
    ${examGuide()}
-   <section class="sec"><h2>${t('attempts')}</h2>${hist.length?`<div class="tbl"><table><thead><tr><th>${t('thDate')}</th><th>${t('thExam')}</th><th>${t('thScore')}</th><th>${t('thResult')}</th><th>${t('thTime')}</th></tr></thead><tbody>${hist.slice(0,10).map(h=>`<tr><td class="mono tnum" style="font-weight:400">${new Date(h.at).toLocaleString(LANG, {dateStyle:'medium',timeStyle:'short'})}</td><td>${esc(examTitle(h.kind))}</td><td class="mono tnum">${h.score} / ${h.total} (${Math.round(h.score/h.total*100)}%)</td><td>${h.pass?`<span class="badge badge--pass">${t('pass')}</span>`:`<span class="badge badge--fail">${t('failB')}</span>`}</td><td class="mono tnum">${fmt(h.secs)}</td></tr>`).join('')}</tbody></table></div>`:`<p class="empty">${t('noAttempts')}</p>`}</section>
+   <section class="sec"><h2>${t('attempts')}</h2>${hist.length?`<div class="tbl"><table><thead><tr><th>${t('thDate')}</th><th>${t('thExam')}</th><th>${t('thScore')}</th><th>${t('thResult')}</th><th>${t('thTime')}</th></tr></thead><tbody>${hist.slice(0,10).map(h=>`<tr><td class="mono tnum plain">${new Date(h.at).toLocaleString(LANG, {dateStyle:'medium',timeStyle:'short'})}</td><td>${esc(examTitle(h.kind))}</td><td class="mono tnum">${h.score} / ${h.total} (${Math.round(h.score/h.total*100)}%)</td><td>${h.pass?`<span class="badge badge--pass">${t('pass')}</span>`:`<span class="badge badge--fail">${t('failB')}</span>`}</td><td class="mono tnum">${fmt(h.secs)}</td></tr>`).join('')}</tbody></table></div>`:`<p class="empty">${t('noAttempts')}</p>`}</section>
    ${CO('note',t('exNoteLabel'),t('exNote'))}</div>`;
   main.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>{const k=b.dataset.start;if(exam&&exam.kind===k&&!exam.done){location.hash='exam-'+k;}else startExam(k);});
 }
@@ -299,17 +324,26 @@ function examView(kind){
    </div>
    <ol class="exam-list">${it.map((q,i)=>{const multi=isMulti(q),ans=exam.ans[i];
      return `<li class="q exq ${exam.flag[i]?'is-flagged':''}" id="exq-${i}"><div class="exq__head"><span class="label">${esc(t('question',i+1,trackName(q.t)))}${q.k?` · K${q.k}`:''}</span><button type="button" class="btn btn--ghost btn--sm" data-flag="${i}" aria-pressed="${!!exam.flag[i]}">${exam.flag[i]?t('flagged'):t('flag')}</button></div>
-     <p class="q__text">${esc(q.q)}${multi?` <span class="badge badge--brand">${t('selectTwo')}</span>`:''}</p>
-     <div class="q__opts" role="${multi?'group':'radiogroup'}">${q.o.map((o,j)=>{const on=multi?(ans||[]).includes(j):ans===j;
-       return `<button type="button" class="opt ${on?'is-picked':''}" role="${multi?'checkbox':'radio'}" aria-checked="${on}" data-i="${i}" data-j="${j}"><span class="k">${String.fromCharCode(65+j)}</span><span>${esc(o)}</span></button>`}).join('')}</div></li>`}).join('')}</ol>
-   <div class="done-row" id="submitRow">${exam.confirm?`<span>${t('unanswered',it.length-answered,Object.values(exam.flag).filter(Boolean).length)}</span><div style="display:flex;gap:8px"><button class="btn btn--secondary" id="keep" type="button">${t('keep')}</button><button class="btn btn--primary" id="really" type="button">${t('submitNow')}</button></div>`:`<span class="empty">${t('checkFlagged')}</span><button class="btn btn--primary" id="submit" type="button">${t('submitExam')}</button>`}</div>
+     <p class="q__text" id="exqt-${i}">${esc(q.q)}${multi?` <span class="badge badge--brand">${t('selectTwo')}</span>`:''}</p>
+     <div class="q__opts" role="${multi?'group':'radiogroup'}" aria-labelledby="exqt-${i}">${q.o.map((o,j)=>{const on=multi?(ans||[]).includes(j):ans===j;
+       const tab=multi||on||(ans===undefined&&j===0)?0:-1; /* radios: one tab stop per group, arrows move inside it */
+       return `<button type="button" class="opt ${on?'is-picked':''}" role="${multi?'checkbox':'radio'}" aria-checked="${on}" tabindex="${tab}" data-i="${i}" data-j="${j}"><span class="k">${String.fromCharCode(65+j)}</span><span>${esc(o)}</span></button>`}).join('')}</div></li>`}).join('')}</ol>
+   <div class="done-row" id="submitRow">${exam.confirm?`<span>${t('unanswered',it.length-answered,Object.values(exam.flag).filter(Boolean).length)}</span><div class="actions"><button class="btn btn--secondary" id="keep" type="button">${t('keep')}</button><button class="btn btn--primary" id="really" type="button">${t('submitNow')}</button></div>`:`<span class="empty">${t('checkFlagged')}</span><button class="btn btn--primary" id="submit" type="button">${t('submitExam')}</button>`}</div>
   </div>`;
-  const tick=()=>{if(!exam||exam.done||!exam.deadline)return;const left=(exam.deadline-Date.now())/1000,el=$('#timer');if(el){el.textContent=fmt(left);el.classList.toggle('is-low',left<300);}if(left<=0)finishExam(true);};
+  /* the low state is a "!" glyph plus colour, and is announced once at 5 and 1 minutes (colour alone would be invisible to many users) */
+  const tick=()=>{if(!exam||exam.done||!exam.deadline)return;const left=(exam.deadline-Date.now())/1000,el=$('#timer'),low=left<300;
+    if(el){el.textContent=(low?'! ':'')+fmt(left);el.classList.toggle('is-low',low);}
+    if(left>0&&left<60&&!exam.warn1){exam.warn1=exam.warn5=true;say(t('timeLow',1));}else if(left>0&&low&&!exam.warn5){exam.warn5=true;say(t('timeLow',5));}
+    if(left<=0)finishExam(true);};
   clearInterval(timerId);if(exam.deadline){tick();timerId=setInterval(tick,1000);}
   main.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{const i=+b.dataset.i,j=+b.dataset.j,q=exam.items[i];
     if(isMulti(q)){let a=exam.ans[i]||[];a=a.includes(j)?a.filter(x=>x!==j):a.concat(j);if(a.length>q.a.length)a=a.slice(-q.a.length);exam.ans[i]=a;}else exam.ans[i]=j;
-    exam.confirm=false;const y=scrollY;examView(kind);scrollTo(0,y);const nb=main.querySelector(`.opt[data-i="${i}"][data-j="${j}"]`);nb&&nb.focus();});
-  main.querySelectorAll('[data-flag]').forEach(b=>b.onclick=()=>{const i=+b.dataset.flag;exam.flag[i]=!exam.flag[i];const y=scrollY;examView(kind);scrollTo(0,y);const nb=main.querySelector(`[data-flag="${i}"]`);nb&&nb.focus();});
+    exam.confirm=false;saveExam();const y=scrollY;examView(kind);scrollTo(0,y);const nb=main.querySelector(`.opt[data-i="${i}"][data-j="${j}"]`);nb&&nb.focus();});
+  main.querySelectorAll('.q__opts[role=radiogroup]').forEach(g=>g.onkeydown=e=>{
+    const d={ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1}[e.key];if(!d)return;
+    const bs=[...g.querySelectorAll('.opt')],i=bs.indexOf(document.activeElement);if(i<0)return;
+    e.preventDefault();bs[(i+d+bs.length)%bs.length].click();});
+  main.querySelectorAll('[data-flag]').forEach(b=>b.onclick=()=>{const i=+b.dataset.flag;exam.flag[i]=!exam.flag[i];saveExam();const y=scrollY;examView(kind);scrollTo(0,y);const nb=main.querySelector(`[data-flag="${i}"]`);nb&&nb.focus();});
   const ask=()=>{if(answered<it.length){exam.confirm=true;examView(kind);$('#submitRow').scrollIntoView({block:'center'});$('#really').focus();}else finishExam(false);};
   $('#submitTop').onclick=ask;const s=$('#submit');if(s)s.onclick=ask;
   const k=$('#keep');if(k)k.onclick=()=>{exam.confirm=false;examView(kind);};
@@ -317,7 +351,8 @@ function examView(kind){
 }
 function finishExam(timeout){
   clearInterval(timerId);if(!exam||exam.done)return;
-  exam.done=true;exam.timeout=timeout;exam.secs=Math.min((Date.now()-exam.start)/1000,exam.deadline?FINAL.mins*60:Infinity);
+  exam.done=true;exam.timeout=timeout;saveExam();if(timeout)say(t('timeRanOut').replace(/[\s·]+$/,''));
+exam.secs=Math.min((Date.now()-exam.start)/1000,exam.deadline?FINAL.mins*60:Infinity);
   const score=exam.items.filter((q,i)=>correct(q,exam.ans[i])).length,total=exam.items.length;
   exam.score=score;exam.pass=score/total>=FINAL.pass;
   st.hist=(st.hist||[]).concat({kind:exam.kind,score,total,pass:exam.pass,secs:Math.round(exam.secs),at:Date.now()}).slice(-10);save();
@@ -334,7 +369,7 @@ function examResult(){
       <div class="result__score"><b class="mono tnum">${exam.score}<span> / ${it.length}</span></b><span class="mono tnum">${t('passMark',Math.round(exam.score/it.length*100),need)}</span></div>
       <div class="result__verdict">${exam.pass?`<span class="badge badge--pass">${t('pass')}</span>`:`<span class="badge badge--fail">${t('failB')}</span>`}<span class="empty mono tnum">${exam.timeout?t('timeRanOut'):''}${t('timeUsed',fmt(exam.secs))}</span></div>
     </div></header>
-   <section class="sec"><h2>${t('byTrack')}</h2><div class="bytrack">${Object.keys(byT).map(tk=>{const v=byT[tk],p=v.r/v.n;return `<div class="bytrack__row"><span>${esc(trackName(tk))}</span><div class="meter"><span style="width:${p*100}%;background:${p>=FINAL.pass?'var(--pass)':'var(--fail)'}"></span></div><span class="mono tnum">${v.r}/${v.n}</span><span class="badge ${p>=FINAL.pass?'badge--pass':'badge--fail'}">${p>=FINAL.pass?'✓':'✕'} ${Math.round(p*100)}%</span></div>`}).join('')}</div>
+   <section class="sec"><h2>${t('byTrack')}</h2><div class="bytrack">${Object.keys(byT).map(tk=>{const v=byT[tk],p=v.r/v.n;return `<div class="bytrack__row"><span>${esc(trackName(tk))}</span><div class="meter ${p>=FINAL.pass?'meter--pass':'meter--fail'}"><span style="width:${p*100}%"></span></div><span class="mono tnum">${v.r}/${v.n}</span><span class="badge ${p>=FINAL.pass?'badge--pass':'badge--fail'}">${p>=FINAL.pass?'✓':'✕'} ${Math.round(p*100)}%</span></div>`}).join('')}</div>
     ${Object.keys(byT).some(t=>byT[t].r/byT[t].n<FINAL.pass)?CO('tip',t('nextStep'),t('nextStepText')):''}</section>
    <section class="sec"><div class="track__head"><h2>${t('review')}</h2><div class="chips" role="group" aria-label="${t('reviewAria')}"><button class="chip" data-f="wrong" aria-pressed="${exam.filter!=='all'}">${t('wrongOrSkipped',wrong.length)}</button><button class="chip" data-f="all" aria-pressed="${exam.filter==='all'}">${t('allN',it.length)}</button></div></div>
     ${show.length?`<ol class="exam-list">${show.map(i=>{const q=it[i],ok=correct(q,exam.ans[i]);return `<li class="q exq"><div class="exq__head"><span class="label">${esc(t('question',i+1,trackName(q.t)))}</span>${ok?`<span class="badge badge--pass">${t('correctB')}</span>`:exam.ans[i]===undefined?`<span class="badge">${t('skippedB')}</span>`:`<span class="badge badge--fail">${t('wrongB')}</span>`}</div>
@@ -354,14 +389,26 @@ function render(){
   else if(r==='exams')examsHub();else if(r.startsWith('exam-')&&(r==='exam-final'||TRACKS.some(t=>'exam-'+t.id===r)))examView(r.slice(5));
   else if(r==='checklist')checkPage('fw');else if(r==='path')checkPage('path');
   else if(r==='resources')resourcesPage();else if(r==='career')careerPage();else home();
-  progress();markCurrent();app.classList.remove('nav-open');$('#menuBtn').setAttribute('aria-expanded','false');
+  progress();markCurrent();setNav(false);
+  const h1=main.querySelector('h1');document.title=(h1?h1.textContent.trim()+' · ':'')+'Automation Hub';
 }
+/* mobile drawer: while closed it is inert (no tab stops, hidden from screen readers); while open the page behind is inert, so focus stays inside */
+const narrow=window.matchMedia('(max-width:900px)');
+function setNav(open,restoreFocus){
+  const was=app.classList.contains('nav-open');
+  app.classList.toggle('nav-open',open);$('#menuBtn').setAttribute('aria-expanded',String(open));
+  $('#side').inert=narrow.matches&&!open;$('#content').inert=narrow.matches&&open;
+  if(open&&!was&&narrow.matches)$('#search').focus();
+  if(!open&&was&&restoreFocus)$('#menuBtn').focus();
+}
+narrow.addEventListener('change',()=>setNav(false));
 window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0);main.focus({preventScroll:true});});
 $('#search').addEventListener('input',e=>renderToc(e.target.value));
-$('#menuBtn').onclick=()=>{const o=app.classList.toggle('nav-open');$('#menuBtn').setAttribute('aria-expanded',o);};
-document.addEventListener('keydown',e=>{if(e.key==='Escape')app.classList.remove('nav-open')});
-document.addEventListener('click',e=>{if(app.classList.contains('nav-open')&&!e.target.closest('#side')&&!e.target.closest('#menuBtn'))app.classList.remove('nav-open')});
+$('#menuBtn').onclick=()=>setNav(!app.classList.contains('nav-open'));
+$('#skip').onclick=e=>{e.preventDefault();main.focus();main.scrollIntoView();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&app.classList.contains('nav-open'))setNav(false,true)});
+document.addEventListener('click',e=>{if(app.classList.contains('nav-open')&&!e.target.closest('#side')&&!e.target.closest('#menuBtn'))setNav(false)});
 let armed=false;$('#resetBtn').onclick=()=>{const b=$('#resetBtn');if(!armed){armed=true;b.textContent=t('confirmReset');setTimeout(()=>{armed=false;b.textContent=t('resetProgress')},3000);return;}
-  st={done:{},ans:{},fw:{},path:{},pk:{},hist:[]};exam=null;save();armed=false;b.textContent=t('progressReset');renderToc();render();};
+  st={done:{},ans:{},fw:{},path:{},pk:{},hist:[]};exam=null;saveExam();save();armed=false;b.textContent=t('progressReset');renderToc();render();};
 renderToc();render();
 })();

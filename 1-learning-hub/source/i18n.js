@@ -50,7 +50,7 @@ function applyTR(){
 
 /* ---------- UI strings ---------- */
 UI.en={
- language:'Language',yourProgress:'Your progress',searchPh:'Search modules…',resetProgress:'Reset progress',confirmReset:'Click again to confirm',progressReset:'Progress reset',menu:'Menu',navAria:'Course navigation',
+ language:'Language',yourProgress:'Your progress',searchPh:'Search modules…',resetProgress:'Reset progress',confirmReset:'Click again to confirm',progressReset:'Progress reset',menu:'Menu',skipLink:'Skip to main content',timeLow:m=>`${m} min left`,navAria:'Course navigation',
  home:'Home',noMatch:f=>`No module mentions “${f}”.`,practice:'Practice',doneAria:'done',doneBadge:'✓ Done',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MODULE ${n}`,min:n=>`${n} min`,
  heroLabel:'A study hub for QA engineers',heroTitle:'Automate the right checks, at the right level.',
  heroLede:(n,h)=>`${n} short modules on Playwright, Cypress, Selenium, API testing, framework design, CI/CD, flaky tests, AI testing and ISTQB certification — each with a self-check quiz, plus practice exams. About ${h} hours in total.`,
@@ -100,7 +100,7 @@ UI.en={
 };
 
 UI.uk={
- language:'Мова',yourProgress:'Ваш прогрес',searchPh:'Пошук модулів…',resetProgress:'Скинути прогрес',confirmReset:'Натисніть ще раз для підтвердження',progressReset:'Прогрес скинуто',menu:'Меню',navAria:'Навігація курсом',
+ language:'Мова',yourProgress:'Ваш прогрес',searchPh:'Пошук модулів…',resetProgress:'Скинути прогрес',confirmReset:'Натисніть ще раз для підтвердження',progressReset:'Прогрес скинуто',menu:'Меню',skipLink:'Перейти до основного вмісту',timeLow:m=>`Залишилось ${m} хв`,navAria:'Навігація курсом',
  home:'Головна',noMatch:f=>`Жоден модуль не згадує «${f}».`,practice:'Практика',doneAria:'пройдено',doneBadge:'✓ Пройдено',quizBadge:(r,q)=>`~ ${r}/${q} тест`,moduleEyebrow:n=>`МОДУЛЬ ${n}`,min:n=>`${n} хв`,
  heroLabel:'Навчальний хаб для QA-інженерів',heroTitle:'Автоматизуйте правильні перевірки на правильному рівні.',
  heroLede:(n,h)=>`${n} коротких модулів про Playwright, Cypress, Selenium, тестування API, архітектуру фреймворків, CI/CD, нестабільні тести, тестування ШІ та сертифікацію ISTQB — кожен із тестом для самоперевірки, а також практичні іспити. Загалом близько ${h} год.`,
@@ -150,7 +150,7 @@ UI.uk={
 };
 
 UI.pl={
- language:'Język',yourProgress:'Twój postęp',searchPh:'Szukaj modułów…',resetProgress:'Zresetuj postęp',confirmReset:'Kliknij ponownie, aby potwierdzić',progressReset:'Postęp zresetowany',menu:'Menu',navAria:'Nawigacja kursu',
+ language:'Język',yourProgress:'Twój postęp',searchPh:'Szukaj modułów…',resetProgress:'Zresetuj postęp',confirmReset:'Kliknij ponownie, aby potwierdzić',progressReset:'Postęp zresetowany',menu:'Menu',skipLink:'Przejdź do głównej treści',timeLow:m=>`Zostało ${m} min`,navAria:'Nawigacja kursu',
  home:'Start',noMatch:f=>`Żaden moduł nie wspomina „${f}”.`,practice:'Praktyka',doneAria:'ukończono',doneBadge:'✓ Ukończono',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MODUŁ ${n}`,min:n=>`${n} min`,
  heroLabel:'Centrum nauki dla inżynierów QA',heroTitle:'Automatyzuj właściwe sprawdzenia na właściwym poziomie.',
  heroLede:(n,h)=>`${n} krótkich modułów o Playwright, Cypress, Selenium, testowaniu API, projektowaniu frameworków, CI/CD, niestabilnych testach, testowaniu AI i certyfikacji ISTQB — każdy z quizem kontrolnym, do tego egzaminy próbne. Łącznie około ${h} godz.`,
@@ -200,7 +200,7 @@ UI.pl={
 };
 
 UI.es={
- language:'Idioma',yourProgress:'Tu progreso',searchPh:'Buscar módulos…',resetProgress:'Reiniciar progreso',confirmReset:'Haz clic de nuevo para confirmar',progressReset:'Progreso reiniciado',menu:'Menú',navAria:'Navegación del curso',
+ language:'Idioma',yourProgress:'Tu progreso',searchPh:'Buscar módulos…',resetProgress:'Reiniciar progreso',confirmReset:'Haz clic de nuevo para confirmar',progressReset:'Progreso reiniciado',menu:'Menú',skipLink:'Saltar al contenido principal',timeLow:m=>`Quedan ${m} min`,navAria:'Navegación del curso',
  home:'Inicio',noMatch:f=>`Ningún módulo menciona «${f}».`,practice:'Práctica',doneAria:'completado',doneBadge:'✓ Completado',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MÓDULO ${n}`,min:n=>`${n} min`,
  heroLabel:'Un centro de estudio para ingenieros de QA',heroTitle:'Automatiza las comprobaciones correctas, en el nivel correcto.',
  heroLede:(n,h)=>`${n} módulos breves sobre Playwright, Cypress, Selenium, pruebas de API, diseño de frameworks, CI/CD, pruebas inestables, pruebas de IA y certificación ISTQB — cada uno con un quiz de autoevaluación, además de exámenes de práctica. Unas ${h} horas en total.`,

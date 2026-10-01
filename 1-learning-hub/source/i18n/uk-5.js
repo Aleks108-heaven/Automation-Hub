@@ -236,7 +236,7 @@ ${CO('note','Однакова ідея, три інструменти','Конв
 </section>
 <section class="sec"><h2>Добірка офіційних джерел</h2>
 <p>Закладки, а не домашнє завдання — первинні джерела, за якими перевірявся сам хаб.</p>
-<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr))">
+<div class="grid grid--wide">
 ${resGroup('Основні інструменти',['pw','cy','se'])}
 ${resGroup('Поза великою трійкою',['wdio','robot','cucumber','appium','karate'])}
 ${resGroup('Візуальне й low-code',['katalon','apeyes'])}

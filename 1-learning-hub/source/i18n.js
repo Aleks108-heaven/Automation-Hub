@@ -50,6 +50,8 @@ function applyTR(){
 
 /* ---------- UI strings ---------- */
 UI.en={
+ exportProgress:'Export progress',importProgress:'Import progress',importOk:(n,m)=>`Imported: ${n} / ${m} modules done`,importBad:'Not a valid progress file',
+ weakTitle:'Worth another look',weakBlurb:'Modules where a quiz answer was wrong. Re-read them, then try the mixed quiz or a track exam.',weakWrong:n=>n===1?'1 answer wrong':`${n} answers wrong`,
  language:'Language',yourProgress:'Your progress',searchPh:'Search modules…',resetProgress:'Reset progress',confirmReset:'Click again to confirm',progressReset:'Progress reset',menu:'Menu',skipLink:'Skip to main content',timeLow:m=>`${m} min left`,navAria:'Course navigation',
  home:'Home',noMatch:f=>`No module mentions “${f}”.`,practice:'Practice',doneAria:'done',doneBadge:'✓ Done',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MODULE ${n}`,min:n=>`${n} min`,
  heroLabel:'A study hub for QA engineers',heroTitle:'Automate the right checks, at the right level.',
@@ -100,6 +102,8 @@ UI.en={
 };
 
 UI.uk={
+ exportProgress:'Експортувати прогрес',importProgress:'Імпортувати прогрес',importOk:(n,m)=>`Імпортовано: ${n} / ${m} модулів пройдено`,importBad:'Це не коректний файл прогресу',
+ weakTitle:'Варто переглянути ще раз',weakBlurb:'Модулі, де відповідь у квізі була хибною. Перечитайте їх, а потім спробуйте змішаний тест або іспит за напрямом.',weakWrong:n=>`Хибних відповідей: ${n}`,
  language:'Мова',yourProgress:'Ваш прогрес',searchPh:'Пошук модулів…',resetProgress:'Скинути прогрес',confirmReset:'Натисніть ще раз для підтвердження',progressReset:'Прогрес скинуто',menu:'Меню',skipLink:'Перейти до основного вмісту',timeLow:m=>`Залишилось ${m} хв`,navAria:'Навігація курсом',
  home:'Головна',noMatch:f=>`Жоден модуль не згадує «${f}».`,practice:'Практика',doneAria:'пройдено',doneBadge:'✓ Пройдено',quizBadge:(r,q)=>`~ ${r}/${q} тест`,moduleEyebrow:n=>`МОДУЛЬ ${n}`,min:n=>`${n} хв`,
  heroLabel:'Навчальний хаб для QA-інженерів',heroTitle:'Автоматизуйте правильні перевірки на правильному рівні.',
@@ -150,6 +154,8 @@ UI.uk={
 };
 
 UI.pl={
+ exportProgress:'Eksportuj postęp',importProgress:'Importuj postęp',importOk:(n,m)=>`Zaimportowano: ${n} / ${m} ukończonych modułów`,importBad:'To nie jest prawidłowy plik postępu',
+ weakTitle:'Warto wrócić',weakBlurb:'Moduły, w których odpowiedź w quizie była błędna. Przeczytaj je ponownie, a potem spróbuj quizu mieszanego lub egzaminu ze ścieżki.',weakWrong:n=>`Błędne odpowiedzi: ${n}`,
  language:'Język',yourProgress:'Twój postęp',searchPh:'Szukaj modułów…',resetProgress:'Zresetuj postęp',confirmReset:'Kliknij ponownie, aby potwierdzić',progressReset:'Postęp zresetowany',menu:'Menu',skipLink:'Przejdź do głównej treści',timeLow:m=>`Zostało ${m} min`,navAria:'Nawigacja kursu',
  home:'Start',noMatch:f=>`Żaden moduł nie wspomina „${f}”.`,practice:'Praktyka',doneAria:'ukończono',doneBadge:'✓ Ukończono',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MODUŁ ${n}`,min:n=>`${n} min`,
  heroLabel:'Centrum nauki dla inżynierów QA',heroTitle:'Automatyzuj właściwe sprawdzenia na właściwym poziomie.',
@@ -200,6 +206,8 @@ UI.pl={
 };
 
 UI.es={
+ exportProgress:'Exportar progreso',importProgress:'Importar progreso',importOk:(n,m)=>`Importado: ${n} / ${m} módulos completados`,importBad:'No es un archivo de progreso válido',
+ weakTitle:'Merece otra mirada',weakBlurb:'Módulos donde una respuesta del cuestionario fue incorrecta. Vuelve a leerlos y prueba el quiz mixto o un examen por área.',weakWrong:n=>`Respuestas incorrectas: ${n}`,
  language:'Idioma',yourProgress:'Tu progreso',searchPh:'Buscar módulos…',resetProgress:'Reiniciar progreso',confirmReset:'Haz clic de nuevo para confirmar',progressReset:'Progreso reiniciado',menu:'Menú',skipLink:'Saltar al contenido principal',timeLow:m=>`Quedan ${m} min`,navAria:'Navegación del curso',
  home:'Inicio',noMatch:f=>`Ningún módulo menciona «${f}».`,practice:'Práctica',doneAria:'completado',doneBadge:'✓ Completado',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MÓDULO ${n}`,min:n=>`${n} min`,
  heroLabel:'Un centro de estudio para ingenieros de QA',heroTitle:'Automatiza las comprobaciones correctas, en el nivel correcto.',

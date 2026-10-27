@@ -1,6 +1,6 @@
 # Automation Hub pipeline.
-#   verify  fast checks that the generated files match their sources
-#   test    browser smoke test of the built hub and the component gallery
+#   verify  fast checks: generated files match their sources, colours meet WCAG AA, translations line up
+#   test    browser smoke test of the built hub and the component gallery, plus the all-routes integrity test
 #   deploy  publish the hub and the design-system gallery to GitLab Pages (default branch only)
 
 stages: [verify, test, deploy]
@@ -32,6 +32,12 @@ tokens:
     # tokens.css, the hub's token block and the gallery must be regenerated from tokens.json
     - node tools/build-tokens.js --check
 
+contrast:
+  stage: verify
+  script:
+    # every documented colour pair must meet WCAG 2.2 AA in both themes
+    - node tools/check-contrast.js
+
 translations:
   stage: verify
   script:
@@ -49,11 +55,12 @@ hub-build:
 e2e:
   stage: test
   <<: *node_cache
-  needs: [tokens, translations, hub-build]
+  needs: [tokens, contrast, translations, hub-build]
   script:
     - npm ci
     - npx playwright install --with-deps chromium
     - npm run test:e2e
+    - npm run test:integrity   # every route in every language: ids, headings, names, links, 320px reflow
 
 pages:
   stage: deploy

@@ -203,12 +203,83 @@ All external facts in the Automation Hub, with the sources each module cites. Fa
 - [ISTQB — CT Test Automation Strategy](https://istqb.org/certifications/certified-tester-test-automation-strategy-ct-tas/)
 - [ISTQB — Exam Structure Tables v1.13 (PDF)](https://istqb.org/wp-content/uploads/sdm-uploads/ISTQB_Exam-Structure-Tables_v1.13.pdf)
 
+## Sources for modules added after v4
+
+The sections above stop at the original 26 modules. These lists are generated from the hub's own source data, so they match what each module cites.
+
+### Beyond the big three: other frameworks
+
+- [WebdriverIO docs](https://webdriver.io/docs/what-is-webdriverio)
+- [Robot Framework](https://robotframework.org/)
+- [Cucumber docs](https://cucumber.io/docs/)
+- [Appium docs](https://appium.io/docs/en/latest/)
+- [Karate (GitHub)](https://github.com/karatelabs/karate)
+
+### Katalon
+
+- [Katalon — Docs](https://docs.katalon.com/)
+- [Katalon — Product roundup May 2026](https://katalon.com/resources-center/blog/katalon-product-roundup-may-2026)
+- [Wikipedia — Katalon Studio](https://en.wikipedia.org/wiki/Katalon_Studio)
+
+### Applitools and Visual AI
+
+- [Applitools — Eyes](https://applitools.com/platform/eyes/)
+- [Applitools docs — Visual AI in Autonomous](https://applitools.com/docs/autonomous/visual-ai)
+- [Applitools — Autonomous and Eyes updates](https://applitools.com/blog/applitools-autonomous-eyes-ai-testing-updates/)
+
+### Vibium: AI-native browser automation
+
+- [Vibium (GitHub)](https://github.com/VibiumDev/vibium)
+- [TestGuild — Vibium from Selenium’s creator](https://testguild.com/vibium-the-new-selenium/)
+- [W3C — WebDriver BiDi](https://www.w3.org/TR/webdriver-bidi/)
+
+### AI in test automation, hands-on
+
+- [Playwright docs — Test agents](https://playwright.dev/docs/test-agents)
+- [Playwright MCP (GitHub)](https://github.com/microsoft/playwright-mcp)
+- [Cypress docs — cy.prompt()](https://docs.cypress.io/api/commands/prompt)
+- [Applitools — Eyes](https://applitools.com/platform/eyes/)
+- [Katalon — Docs](https://docs.katalon.com/)
+- [Vibium (GitHub)](https://github.com/VibiumDev/vibium)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+- [Healenium](https://healenium.io/)
+
+### Test design techniques
+
+- [ISTQB CTFL Syllabus v4.0.1 (PDF, via ASTQB)](https://astqb.org/assets/documents/ISTQB_CTFL_Syllabus_v4.0.1.pdf)
+- [Playwright docs — Parameterize tests](https://playwright.dev/docs/test-parameterize)
+- [PICT — Pairwise Independent Combinatorial Testing (GitHub)](https://github.com/microsoft/pict)
+- [allpairspy — pairwise test case generator (GitHub)](https://github.com/thombashi/allpairspy)
+
+### Security testing for QA
+
+- [OWASP Top 10:2025](https://owasp.org/Top10/2025/)
+- [OWASP API Security Top 10 (2023)](https://owasp.org/API-Security/editions/2023/en/0x11-t10/)
+- [OWASP Cheat Sheet — HTTP Security Response Headers](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html)
+- [MDN — Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP)
+- [OSV — Open Source Vulnerabilities database](https://osv.dev/)
+- [FIRST — Common Vulnerability Scoring System](https://www.first.org/cvss/)
+- [Playwright docs — API testing](https://playwright.dev/docs/api-testing)
+
+### Defect reports and QA reports
+
+- [ISTQB CTFL Syllabus v4.0.1 (PDF, via ASTQB)](https://astqb.org/assets/documents/ISTQB_CTFL_Syllabus_v4.0.1.pdf)
+- [ISTQB — CTFL v4.0 certification page](https://istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/)
+- [OWASP Top 10:2025](https://owasp.org/Top10/2025/)
+
+## Verification notes for the v6 modules (26 October 2026)
+
+- **Checked:** the OWASP Top 10:2025 category names, the two new categories (A03 Software Supply Chain Failures, A10 Mishandling of Exceptional Conditions) and SSRF being folded into A01, against search results citing owasp.org. One of those sources noted the list was still a release candidate when it was written, so re-check <https://owasp.org/Top10/2025/> for the final text. All seven new links returned HTTP 200 on 26 October 2026.
+- **Not re-checked against the live syllabus:** the statement that pairwise testing is not on the CTFL v4.0 black-box technique list. It comes from the author's reading of the syllabus; confirm against section 4 of the CTFL v4.0.1 PDF.
+- **A convention, not a standard:** the impact × likelihood bands (Critical 20–25, High 12–19, Medium 6–11, Low 2–5, Informational 0–1), the P1–P4 priorities and the five final QA statuses come from the report template supplied with this project. The Security testing module points to CVSS for third-party vulnerabilities.
+- **Illustrative code:** the data-driven age test, the order state-transition test, the header and cookie tests and the two-user authorisation test use made-up routes (/signup, /api/orders) and were not run against a live application. The Playwright APIs they call (equest.get, esponse.headers(), context.cookies(), playwright.request.newContext) are documented ones.
+
 ## Content inventory
 
 - Tracks: Foundations, The tools, Framework engineering, Strategy and quality, AI testing, Certification
-- Modules: 26
-- Module quiz questions: 164
-- Exam-only questions: 65
-- Glossary / flashcard terms: 63
+- Modules: 34
+- Module quiz questions: 197
+- Exam-only questions: 71
+- Glossary / flashcard terms: 86
 - Framework review checks: 25
 - Study path steps: 15

@@ -8,9 +8,11 @@
     "tokens": "node tools/build-tokens.js",
     "check:tokens": "node tools/build-tokens.js --check",
     "check:i18n": "node tools/check-i18n.js 1-learning-hub/source",
-    "check": "npm run check:tokens && npm run check:i18n",
+    "check:contrast": "node tools/check-contrast.js",
+    "check": "npm run check:tokens && npm run check:contrast && npm run check:i18n",
     "test:e2e": "node tests/e2e/smoke.js",
-    "test": "npm run check && npm run test:e2e"
+    "test:integrity": "node tests/e2e/integrity.js",
+    "test": "npm run check && npm run test:e2e && npm run test:integrity"
   },
   "devDependencies": {
     "playwright": "1.63.0"

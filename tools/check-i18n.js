@@ -1,7 +1,7 @@
 // Usage: node tools/check-i18n.js 1-learning-hub/source  — checks every translation against the English structure
 const fs=require('fs'),path=require('path'),vm=require('vm');
 const dir=process.argv[2];
-const files=['data.js','data2.js','data3.js','data4.js','data5.js','i18n.js',...fs.readdirSync(path.join(dir,'i18n')).filter(f=>f.endsWith('.js')).sort().map(f=>'i18n/'+f)];
+const files=['data.js','data2.js','data3.js','data4.js','data5.js','data6.js','i18n.js',...fs.readdirSync(path.join(dir,'i18n')).filter(f=>f.endsWith('.js')).sort().map(f=>'i18n/'+f)];
 const ctx={console,location:{search:''},localStorage:{getItem:()=>null},URLSearchParams};vm.createContext(ctx);
 for(const f of files)vm.runInContext(fs.readFileSync(path.join(dir,f),'utf8'),ctx,{filename:f});
 const r=vm.runInContext(`({TR,MODULES,GLOSSARY,FRAMEWORK_CHECKS,STUDY_PATH,EXAM_BANK,TRACKS,UI})`,ctx);

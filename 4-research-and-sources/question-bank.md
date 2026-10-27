@@ -1495,6 +1495,62 @@ Every quiz and exam question with its answer and explanation — useful for offl
 
 *Answer: C* — Escaped defects are bugs tests could have caught but didn’t.
 
+### Test design techniques
+
+**1. A quantity field accepts 1 to 10. Which set is the three-value boundary set for the upper edge?**
+
+- A. 9, 10, 11
+- B. 10 only
+- C. 5, 10, 20
+- D. 1, 10
+
+*Answer: A* — Three-value boundary analysis tests the boundary and both neighbours: 9, 10 and 11.
+
+**2. Why does equivalence partitioning reduce the number of tests?**
+
+- A. It removes the need for expected results
+- B. One value represents a whole group the system treats the same way
+- C. It only tests valid input
+- D. It tests every possible value once
+
+*Answer: B* — If every value in a partition behaves alike, one representative is enough to find a defect in that partition.
+
+**3. What does merging rows with identical outcomes in a decision table achieve?**
+
+- A. It removes conditions that matter
+- B. It makes the table longer
+- C. Fewer rules to test, with every distinct outcome still covered
+- D. It replaces boundary testing
+
+*Answer: C* — Rules that differ only in an irrelevant condition collapse into one, so you test each distinct outcome once.
+
+**4. What should happen when an invalid state transition is attempted, such as reopening a shipped order?**
+
+- A. It should be accepted and logged
+- B. The state should reset to the start
+- C. It should be refused and leave the state unchanged
+- D. Nothing needs to be checked
+
+*Answer: C* — An invalid transition must be rejected without side effects; checking that the state did not change catches half-applied actions.
+
+**5. 3 browsers × 3 plans × 3 locales give 27 combinations. What does a pairwise set promise?**
+
+- A. Every combination of three values is tested
+- B. Every pair of values appears in at least one test, usually in far fewer tests
+- C. Only the most common browser is tested
+- D. Locale never matters
+
+*Answer: B* — Pairwise covers all two-way interactions, which is where most combination defects appear, at a fraction of the full set.
+
+**6. Which is a weakness of pairwise testing?**
+
+- A. It cannot be automated
+- B. It needs more tests than all combinations
+- C. It only works for numbers
+- D. It can miss a defect that needs three or more specific values together
+
+*Answer: D* — Pairwise covers pairs, not triples. Add high-risk combinations by hand.
+
 ### Flaky tests and reliability
 
 **1. A test passes alone but fails when the full suite runs in parallel. Most likely cause?**
@@ -1598,6 +1654,62 @@ Every quiz and exam question with its answer and explanation — useful for offl
 
 *Answer: B* — Automated scanners detect only part of accessibility issues.
 
+### Security testing for QA
+
+**1. A scanner reports possible SQL injection and you have not reproduced it. How do you report it?**
+
+- A. Confirmed, Critical
+- B. Informational, always
+- C. Suspected, until you reproduce it safely
+- D. Not worth reporting
+
+*Answer: C* — An indicator without a reproduced effect is Suspected. Only a reproduced issue is Confirmed.
+
+**2. User B requests user A’s order by id and receives A’s data with a 200. Which OWASP Top 10:2025 category fits best?**
+
+- A. A02 Security Misconfiguration
+- B. A05 Injection
+- C. A01 Broken Access Control
+- D. A10 Mishandling of Exceptional Conditions
+
+*Answer: C* — Reading another user’s object by changing an id is a broken access control flaw (BOLA / IDOR).
+
+**3. Which two categories are new in the OWASP Top 10:2025?**
+
+- A. Injection and Insecure Design
+- B. Broken Access Control and Cryptographic Failures
+- C. Security Logging and SSRF
+- D. Software Supply Chain Failures and Mishandling of Exceptional Conditions
+
+*Answer: D* — A03 and A10 are new in 2025; SSRF was folded into A01.
+
+**4. Which response header tells browsers to use HTTPS only for future visits?**
+
+- A. Strict-Transport-Security
+- B. Referrer-Policy
+- C. X-Content-Type-Options
+- D. Permissions-Policy
+
+*Answer: A* — HSTS makes the browser upgrade to HTTPS. Browsers ignore it when it is received over plain HTTP.
+
+**5. Impact 4 and likelihood 4 give a score of 16. Which severity band is that (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?**
+
+- A. Low
+- B. Medium
+- C. Critical
+- D. High
+
+*Answer: D* — 4 × 4 = 16, which falls in the 12–19 band: High.
+
+**6. A session cookie lacks the HttpOnly flag. What does that allow?**
+
+- A. The cookie cannot be sent over HTTPS
+- B. Page scripts to read the cookie, so an XSS flaw can steal the session
+- C. Other sites to embed the page
+- D. The cookie to expire immediately
+
+*Answer: B* — HttpOnly hides the cookie from JavaScript. Without it, injected script can read and exfiltrate the session.
+
 ### How automation projects fail
 
 **1. A test asserts only that the page returned HTTP 200. Which failure mode is this?**
@@ -1644,6 +1756,62 @@ Every quiz and exam question with its answer and explanation — useful for offl
 - D. Can we remove all manual testing?
 
 *Answer: A* — Escaped bugs reveal gaps in risk coverage.
+
+### Defect reports and QA reports
+
+**1. Which statement about severity and priority is correct?**
+
+- A. Severity is how soon to fix it; priority is the impact
+- B. They mean the same thing
+- C. Severity is the impact if it ships; priority is how soon to fix it
+- D. Severity is set by developers only
+
+*Answer: C* — Severity describes impact; priority is a scheduling decision. A cosmetic defect can be urgent, and a serious one can wait.
+
+**2. A typo in the company name on the home page the day before a launch is best described as…**
+
+- A. High severity, P4
+- B. Critical severity, P3
+- C. Informational, no priority
+- D. Low severity, P1
+
+*Answer: D* — The impact is small (Low) but the timing makes it urgent (P1).
+
+**3. A report says “Checkout is broken sometimes”. What is the most useful missing information?**
+
+- A. Who caused it
+- B. Exact steps, environment, expected versus actual result and how often it happens
+- C. A longer title
+- D. A guess at the root cause
+
+*Answer: B* — Reproducible steps and context let a developer see the problem. Blame and guesses do not.
+
+**4. You reproduced a flaw that lets one user read another’s orders. Which label applies?**
+
+- A. Suspected
+- B. Not tested
+- C. Confirmed
+- D. Informational
+
+*Answer: C* — A reproduced finding with evidence is Confirmed.
+
+**5. The whole scope was verified; one Medium and two Low findings remain open; nothing High or Critical. Which status?**
+
+- A. PASS
+- B. PARTIALLY VERIFIED
+- C. FAIL
+- D. PASS WITH FINDINGS
+
+*Answer: D* — Whole scope verified and only Medium, Low or Informational findings open: rule 4, PASS WITH FINDINGS.
+
+**6. One service was unavailable, so half the scope was not tested. The other half was verified with no Confirmed Critical or High findings. Which status?**
+
+- A. PASS WITH FINDINGS
+- B. NOT ENOUGH EVIDENCE
+- C. PARTIALLY VERIFIED
+- D. PASS
+
+*Answer: C* — Part of the scope is Not tested and nothing Confirmed Critical or High exists, so rule 3 applies. Rule 2 is for when too little could be verified to conclude anything.
 
 ### Exam-only questions
 
@@ -1728,6 +1896,60 @@ Every quiz and exam question with its answer and explanation — useful for offl
 - D. They only check colours
 
 *Answer: B* — Scanners find rule-based violations, not the full user experience.
+
+**E10. A password must be 8 to 64 characters. Which lengths form the three-value boundary set?** · K3
+
+- A. 7, 8, 9 and 63, 64, 65
+- B. 8 and 64 only
+- C. 1, 32, 100
+- D. 0, 8, 64
+
+*Answer: A* — Three-value analysis tests each boundary and both of its neighbours.
+
+**E11. What does a pairwise test set guarantee?** · K2
+
+- A. Every three-way combination is covered
+- B. All defects are found
+- C. Every pair of parameter values appears in at least one test
+- D. Only valid combinations are used
+
+*Answer: C* — Pairwise covers all two-way interactions with far fewer tests than the full product.
+
+**E12. A decision table has three yes/no conditions. How many combinations exist before merging identical outcomes?** · K3
+
+- A. 3
+- B. 8
+- C. 6
+- D. 9
+
+*Answer: B* — 2 × 2 × 2 = 8.
+
+**E13. A scanner flags possible XSS and the tester has not reproduced it. Which label fits?** · K2
+
+- A. Confirmed
+- B. Suspected
+- C. Fixed
+- D. Informational only
+
+*Answer: B* — Indicators without a reproduced effect are Suspected.
+
+**E14. Which response header limits where a page may load scripts from?** · K2
+
+- A. Referrer-Policy
+- B. Cache-Control
+- C. Content-Security-Policy
+- D. Accept-Language
+
+*Answer: C* — Content-Security-Policy restricts script, frame and other content sources.
+
+**E15. Impact 5 and likelihood 3 give 15. Which band is that (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?** · K3
+
+- A. Critical
+- B. High
+- C. Medium
+- D. Low
+
+*Answer: B* — 5 × 3 = 15 falls in the 12–19 band: High.
 
 ## AI testing
 

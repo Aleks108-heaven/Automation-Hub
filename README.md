@@ -4,7 +4,7 @@ A self-study hub for QA engineers covering test automation (Playwright, Cypress,
 
 ## Start here
 
-Open **`1-learning-hub/automation-hub.html`** in any modern browser (double-click it). It works offline, apart from the web font, which falls back to system fonts.
+Open **`1-learning-hub/automation-hub.html`** in any modern browser (double-click it). It works offline, apart from the web font, which falls back to system fonts. When online, each visit loads IBM Plex from Google Fonts, so Google sees the reader's IP address.
 
 ## How to run
 
@@ -34,9 +34,11 @@ Open **`1-learning-hub/automation-hub.html`** in any modern browser (double-clic
 Handy if you want to open the hub from a phone on the same network. Use either command, run from the repository folder:
 
 ```sh
-npx serve 1-learning-hub          # Node.js
-python -m http.server -d 1-learning-hub 8080   # Python 3
+npx serve@14.2.6 1-learning-hub   # Node.js, version pinned (checked 27 October 2026)
+python -m http.server -d 1-learning-hub 8080   # Python 3, nothing to download
 ```
+
+`serve@14.2.6` pins the package itself, not its own dependencies (`npx` has no lockfile). If that matters, use the Python command.
 
 Then open `http://localhost:8080/automation-hub.html` (for `serve`, use the port it prints).
 
@@ -54,7 +56,7 @@ The hub and its design system are also published as private pages in your Claude
 About the online version:
 
 - **It's private.** Only you can open it until you share it from the page's **Share** menu.
-- **Progress is stored separately** from the local file: each copy remembers its own progress in the browser.
+- **Progress is stored separately** from the local file: each copy remembers its own progress in the browser. To carry progress from one to the other, use **Export progress** and **Import progress** in the sidebar.
 - **To update it:** rebuild the HTML (see below), then ask Claude Code to republish `1-learning-hub/automation-hub.html` to the URL above. The link stays the same.
 - **In the terminal:** `/artifacts` in Claude Code lists your artifacts. Press `o` to open one, `c` to copy its link.
 
@@ -69,17 +71,17 @@ cd 1-learning-hub/source
 sh build.sh                      # writes ../automation-hub.html
 ```
 
-The build joins the files in this order: `part1.html` (styles and layout), `data.js` → `data5.js` (English content), `i18n.js`, `i18n/*.js` (translations), `app.js`.
+The build joins the files in this order: `part1.html` (styles and layout), `data.js` → `data6.js` (English content), `i18n.js`, `i18n/*.js` (translations), `app.js`.
 
 ### Changing content
 
 | To change… | Edit |
 | --- | --- |
-| A module's English text, quiz or sources | `data.js`–`data5.js` (later files add to or override earlier ones) |
+| A module's English text, quiz or sources | `data.js`–`data6.js` (later files add to or override earlier ones) |
 | Flashcard pictures | `FC_PIC` (which picture each card gets) and `PIC` (the drawings) in `data5.js` |
 | Exam-only questions | `EXAM_BANK` in `data3.js` / `data4.js` |
 | Buttons, labels and messages (all languages) | `UI.en`, `UI.uk`, `UI.pl`, `UI.es` in `i18n.js` |
-| Translated module content | `i18n/<lang>-1.js` (Foundations, Tools), `-2` (Framework), `-3` (Quality, AI, Certification), `-4` (tracks, glossary, checklist, study path, exam bank), `-5` (the September 2026 additions) |
+| Translated module content | `i18n/<lang>-1.js` (Foundations, Tools), `-2` (Framework), `-3` (Quality, AI, Certification), `-4` (tracks, glossary, checklist, study path, exam bank), `-5` (the September 2026 additions), `-6` (test design, security testing, defect reporting) |
 | Final exam mix, pass mark, timer | `FINAL` in `app.js` |
 | Colours, spacing, fonts, motion | `2-design-system/tokens.json`, then run `node tools/build-tokens.js` (the token block in `part1.html` is generated; layout and component CSS stay in `part1.html`) |
 
@@ -100,12 +102,14 @@ The build joins the files in this order: `part1.html` (styles and layout), `data
 
 ```sh
 npm install        # once: installs Playwright for the browser test
-npm run check      # tokens in sync + translations match the English structure
+npm run check      # tokens in sync + every documented colour pair meets WCAG AA + translations match the English structure
 npm run build      # rebuild 1-learning-hub/automation-hub.html from source/
-npm test           # checks + a 30-point browser smoke test (accessibility, exam persistence, layout)
+npm test           # checks + a 45-point browser smoke test + the all-routes integrity test
 ```
 
-`.gitlab-ci.yml` runs the same things on every push and merge request: **tokens**, **translations**, **hub-build** (fails if the committed `automation-hub.html` is stale), then the **e2e** browser test. On the default branch a **pages** job publishes the hub at the Pages root and the design-system gallery under `/design-system/`.
+The smoke test covers accessibility, exam persistence, layout, the translated modules, the weak-spots list and progress export/import. The integrity test (`npm run test:integrity`, about 30 seconds) opens all 50 routes in all four languages and fails on console errors, duplicate ids, a missing or doubled `h1`, skipped heading levels, unnamed controls, in-page links to unknown routes, or horizontal scrolling at 320 px.
+
+`.gitlab-ci.yml` runs the same things on every push and merge request: **tokens**, **contrast**, **translations**, **hub-build** (fails if the committed `automation-hub.html` is stale), then the **e2e** browser tests. On the default branch a **pages** job publishes the hub at the Pages root and the design-system gallery under `/design-system/`.
 
 **Putting the repo on GitLab:** create an empty project on GitLab (no README), then
 
@@ -120,7 +124,8 @@ The pipeline starts by itself. Pages are served at `https://<your-namespace>.git
 
 | Problem | Fix |
 | --- | --- |
-| Progress disappeared | Progress is saved per browser and per file location. Opening the file from another folder, browser or private window starts fresh. **Reset progress** in the sidebar also clears it. |
+| Progress disappeared | Progress is saved per browser and per file location. Opening the file from another folder, browser or private window starts fresh. **Reset progress** in the sidebar also clears it. Use **Export progress** to save a backup file and **Import progress** to restore it anywhere. |
+| Export does nothing | The page is running somewhere that blocks downloads (some embedded or sandboxed viewers). Open the file directly in a browser tab. |
 | Page stays in English after choosing a language | The browser may be blocking storage, so the choice isn't remembered. Use a `?lang=` link instead. |
 | Part of a module is in English in another language | That section's translation no longer matches the English. Run `tools/check-i18n.js` to find it. |
 | Fonts look different offline | The IBM Plex fonts load from Google Fonts; without a connection, system fonts are used. |
@@ -130,14 +135,23 @@ The pipeline starts by itself. Pages are served at `https://<your-namespace>.git
 
 | Folder | Contents |
 | --- | --- |
-| `1-learning-hub/` | `automation-hub.html`: the complete hub in one file. It has 31 modules in 6 tracks, each opening with learning objectives. It also has 179 quiz questions, 65 exam-only questions, 78 illustrated flashcards, a tool picker, a 25-point framework checklist, a study path, per-track exams, a timed 40-question final exam, a guide to how the exams work, a cheat-sheets & references page and a career-prep page (a 19-question interview bank, portfolio project ideas, a skills-to-job-posting checklist). It is available in **English, Ukrainian (Українська), Polish (Polski) and Spanish (Español)**, fully translated including the cheat sheets and career-prep page: pick a language at the bottom of the sidebar, or open the file with `?lang=uk`, `?lang=pl` or `?lang=es`. Code examples stay in English. |
-| `1-learning-hub/source/` | Editable sources: `part1.html` (styles and layout), `data.js` / `data2.js` / `data3.js` / `data4.js` / `data5.js` (English content, quizzes, exam bank, cheat sheets and career prep; `data4.js` adds the objectives, the deeper sections, the four new framework modules and the extra questions, `data5.js` adds the newest tool modules, hands-on labs, and the cheat-sheets/career pages), `i18n.js` (language switching and interface text in all four languages), `i18n/uk-*.js`, `i18n/pl-*.js`, `i18n/es-*.js` (translated content), `app.js` (app logic and exams). When you change English content, update the matching translation files too. Anything that no longer matches falls back to English. Run `build.sh` to rebuild the HTML after editing. |
+| `1-learning-hub/` | `automation-hub.html`: the complete hub in one file. It has 34 modules in 6 tracks, each opening with learning objectives. It also has 197 quiz questions, 71 exam-only questions, 86 illustrated flashcards, a tool picker, a 25-point framework checklist, a study path, per-track exams, a timed 40-question final exam, a guide to how the exams work, a cheat-sheets & references page and a career-prep page (a 19-question interview bank, portfolio project ideas, a skills-to-job-posting checklist). It is available in **English, Ukrainian (Українська), Polish (Polski) and Spanish (Español)**, fully translated including the cheat sheets and career-prep page: pick a language at the bottom of the sidebar, or open the file with `?lang=uk`, `?lang=pl` or `?lang=es`. Code examples stay in English. Progress can be exported to a JSON file and imported again from the sidebar. |
+| `1-learning-hub/source/` | Editable sources: `part1.html` (styles and layout), `data.js` / `data2.js` / `data3.js` / `data4.js` / `data5.js` / `data6.js` (English content, quizzes, exam bank, cheat sheets and career prep; `data4.js` adds the objectives, the deeper sections, the four new framework modules and the extra questions, `data5.js` adds the newest tool modules, hands-on labs, and the cheat-sheets/career pages, `data6.js` adds the test design, security testing and defect reporting modules), `i18n.js` (language switching and interface text in all four languages), `i18n/uk-*.js`, `i18n/pl-*.js`, `i18n/es-*.js` (translated content), `app.js` (app logic and exams). When you change English content, update the matching translation files too. Anything that no longer matches falls back to English. Run `build.sh` to rebuild the HTML after editing. |
 | `2-design-system/` | The Automation Hub design system. `README.md` is the brand book. `tokens.json` / `tokens.css` hold the colours for light and dark themes, plus type, spacing and radius. `components/` has 13 components, each with a guide and a preview, and `components/bundle.css` has their styles. Open **`components-gallery.html`** to see every component live, with a light/dark toggle. |
 | `3-source-documents/` | Your two original documents: the Test Automation study guide (.docx) and the AI Testing research overview (.md). |
-| `tools/` | `build-tokens.js`: regenerates every copy of the design tokens from `tokens.json` (`--check` to detect drift). `check-i18n.js`: checks that every translation matches the English structure and lists what is still in English. `build-question-bank.js`: rewrites `question-bank.md` from the sources. |
+| `tools/` | `build-tokens.js`: regenerates every copy of the design tokens from `tokens.json` (`--check` to detect drift). `check-i18n.js`: checks that every translation matches the English structure and lists what is still in English. `check-contrast.js`: checks the documented colour pairs against WCAG 2.2 AA in both themes. `build-question-bank.js`: rewrites `question-bank.md` from the sources. |
 | `4-research-and-sources/` | `research-and-sources.md` lists every source per module, the corrections made during research, and the items to double-check. `question-bank.md` has all quiz and exam questions with answers and explanations, for revising offline. |
 
-## What's new (1 October 2026): design and accessibility pass
+## What's new (26 October 2026): QA review, three new modules, backup and weak spots
+
+- **Three new modules in Strategy and quality**, each fully translated: **Test design techniques** (equivalence partitions, boundary values, decision tables reduced from 8 combinations to 4 rules, state transitions, pairwise testing, error guessing and charters), **Security testing for QA** (a tester's walk through the OWASP Top 10:2025, header and cookie tests, a two-user authorisation test, dependencies and secrets, impact × likelihood scoring) and **Defect reports and QA reports** (a reproducible defect, severity versus priority, Confirmed / Suspected / Not tested, five final-status rules, a report layout). They add 18 quiz questions, 6 exam questions and 8 flashcards.
+- **Export and import progress.** Two sidebar buttons save and restore progress as a JSON file, so it can move between browsers or from the local file to the online copy. Import is validated like any stored data and **merges**: it never removes what is already there.
+- **"Worth another look" on Home** lists the modules where a quiz answer was wrong, worst first.
+- **Fixed:** the mixed quiz and the flashcard shuffle used a biased `sort(() => Math.random() - .5)` (the first item stayed first 28.7 % of the time instead of 16.7 %); they now use the Fisher-Yates `shuffle`. The API testing module scrolled sideways by 4 px at 320 px because one long inline `code` token could not wrap.
+- **New checks:** `npm run check:contrast` (80 colour pairs, both themes) and `npm run test:integrity` (all routes, all languages), both in CI. The smoke test grew from 30 to 45 checks.
+- **Docs:** `research-and-sources.md` now lists the sources of the five modules added in September and the three new ones, with a note on what was and was not verified. `4-research-and-sources/qa-review-2026-10-26.md` is the review report behind these changes.
+
+## Earlier (1 October 2026): design and accessibility pass
 
 - **Accessibility.** Skip link and a page-specific title on every view. The mobile menu is `inert` while closed (it used to be tabbable off-screen) and the page behind it is `inert` while open; Escape closes it and returns focus to **Menu**. Quiz answers move focus to their explanation. Exam answer groups are labelled, are a single tab stop, and move with the arrow keys. The low-time timer now shows a "!" and is announced at 5 and 1 minute, and the auto-submit is announced. Touch targets grow to 44px on touch screens, and `prefers-contrast` and forced-colors modes are handled.
 - **A running exam survives a reload** (stored per tab in `sessionStorage`, validated on load, cleared when the exam finishes).

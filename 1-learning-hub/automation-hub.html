@@ -97,7 +97,7 @@ a.card:hover{box-shadow:var(--shadow-raised);border-color:var(--line-strong);col
 .callout--note{background:var(--brand-soft)} .callout--note .callout__label{color:var(--brand)}
 pre.code{background:var(--code-bg);color:var(--code-ink);font:400 13.5px/22px var(--font-mono);border-radius:var(--radius-md);padding:var(--space-4);overflow-x:auto;margin:0;white-space:pre}
 pre.code .c{color:var(--code-muted)} pre.code .k{color:var(--code-key)} pre.code .s{color:var(--code-str)}
-code.i{font:400 .875em/1 var(--font-mono);background:var(--surface-200);padding:2px 5px;border-radius:var(--radius-sm)}
+code.i{font:400 .875em/1 var(--font-mono);background:var(--surface-200);padding:2px 5px;border-radius:var(--radius-sm);overflow-wrap:anywhere}
 details.faq{border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-000)}
 details.faq+details.faq{margin-top:var(--space-1h)}
 details.faq summary{cursor:pointer;padding:var(--space-3) var(--space-4);font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:var(--space-3)}
@@ -295,7 +295,7 @@ div.opt{cursor:default}
     </div>
     <input class="search" id="search" type="search" placeholder="Search modules…" aria-label="Search modules">
     <nav class="toc" id="toc"></nav>
-    <div class="side__foot"><button class="btn btn--ghost btn--sm" id="resetBtn" type="button">Reset progress</button></div>
+    <div class="side__foot"><button class="btn btn--ghost btn--sm" id="exportBtn" type="button">Export progress</button><button class="btn btn--ghost btn--sm" id="importBtn" type="button">Import progress</button><button class="btn btn--ghost btn--sm" id="resetBtn" type="button">Reset progress</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
   </aside>
   <div id="content">
     <div class="topbar">
@@ -2388,6 +2388,265 @@ ${T(['You\'ll see…','It means…','Covered in'],[
 ${CO('note','Using this responsibly','Being fluent in these terms and able to discuss trade-offs matters more than memorising definitions. If you use AI tools in an interview take-home, say so and be ready to explain what you reviewed and changed.')}
 </section>`;
 })();
+/* ================= v6: test design techniques, security testing for QA, defect and QA reporting ================= */
+/* New modules carry their own “What you’ll learn” section (OBJECTIVES in data4.js has already been applied). */
+Object.assign(SRC,{
+  pict:['PICT — Pairwise Independent Combinatorial Testing (GitHub)','https://github.com/microsoft/pict'],
+  allpairs:['allpairspy — pairwise test case generator (GitHub)','https://github.com/thombashi/allpairspy'],
+  owasp25:['OWASP Top 10:2025','https://owasp.org/Top10/2025/'],
+  owaspheaders:['OWASP Cheat Sheet — HTTP Security Response Headers','https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html'],
+  mdncsp:['MDN — Content Security Policy (CSP)','https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP'],
+  osv:['OSV — Open Source Vulnerabilities database','https://osv.dev/'],
+  cvss:['FIRST — Common Vulnerability Scoring System','https://www.first.org/cvss/'],
+});
+
+/* ---------- new module: test design techniques ---------- */
+const TEST_DESIGN={id:'test-design',track:'qual',title:'Test design techniques',min:13,
+ sum:'Equivalence partitions, boundary values, decision tables, state transitions and pairwise combinations: how to choose a small set of cases that still finds most defects.',
+ sections:[
+  S('What you’ll learn',UL(['Split an input into equivalence partitions and pick boundary values','Reduce a decision table to the smallest set of rules','Test valid and invalid state transitions','Cut a combinatorial explosion down with pairwise testing','Write the chosen cases down and turn them into data-driven tests'])),
+  S('Design first, then automate',`<p>Playwright, Cypress and Selenium execute checks. They do not decide <i>which</i> checks are worth running. Test design techniques are repeatable methods for choosing a small set of cases that still finds most defects. They answer “which inputs, which states, which combinations?” before any code is written.</p>
+${T(['Technique','Use it when','Example'],[
+   ['Equivalence partitioning','Inputs fall into groups the system treats alike','Age below, inside and above the allowed range'],
+   ['Boundary value analysis','There are ranges and limits; off-by-one defects live here','17, 18, 19 and 64, 65, 66'],
+   ['Decision table','Several conditions combine into different outcomes','Member × coupon × order total'],
+   ['State transition','Behaviour depends on history or status','Order: draft → submitted → approved'],
+   ['Pairwise','Many parameters with several values each','Browser × plan × locale'],
+   ['Error guessing, exploratory','Experience says where it breaks','Double-click submit, paste a huge text']])}
+${CO('note','Key idea','The ISTQB Foundation syllabus (v4.0) lists equivalence partitioning, boundary value analysis, decision tables and state transition testing as black-box techniques, and error guessing and exploratory testing as experience-based ones. Pairwise testing is not on that list but is widely used in practice.')}`),
+  S('Equivalence partitions and boundary values',`<p>A sign-up form accepts an age from 18 to 65. <b>Equivalence partitioning</b> groups inputs the system should treat the same way and tests one value from each group. <b>Boundary value analysis</b> then adds the edges of each valid range, because off-by-one mistakes (<code class="i">&gt;</code> where <code class="i">&gt;=</code> was meant) cluster there.</p>
+${T(['Partition','Example value','Expected'],[
+   ['Below the range (invalid)','10','Rejected, message names the range 18 to 65'],
+   ['Inside the range (valid)','40','Accepted'],
+   ['Above the range (invalid)','80','Rejected'],
+   ['Not a number','abc','Rejected, no crash'],
+   ['Empty','(blank)','Rejected: required']])}
+<p>The three-value boundary set for 18 to 65 is <b>17, 18, 19</b> and <b>64, 65, 66</b>. Feed the cases to one data-driven test:</p>
+<pre class="code"><span class="k">const</span> ages = [
+  { age: <span class="s">'17'</span>, ok: <span class="k">false</span> }, { age: <span class="s">'18'</span>, ok: <span class="k">true</span> }, { age: <span class="s">'19'</span>, ok: <span class="k">true</span> },
+  { age: <span class="s">'40'</span>, ok: <span class="k">true</span> },
+  { age: <span class="s">'64'</span>, ok: <span class="k">true</span> }, { age: <span class="s">'65'</span>, ok: <span class="k">true</span> }, { age: <span class="s">'66'</span>, ok: <span class="k">false</span> },
+  { age: <span class="s">'abc'</span>, ok: <span class="k">false</span> }, { age: <span class="s">''</span>, ok: <span class="k">false</span> },
+];
+
+<span class="k">for</span> (<span class="k">const</span> { age, ok } <span class="k">of</span> ages) {
+  test(<span class="s">'age "'</span> + age + <span class="s">'" is '</span> + (ok ? <span class="s">'accepted'</span> : <span class="s">'rejected'</span>), <span class="k">async</span> ({ page }) =&gt; {
+    <span class="k">await</span> page.goto(<span class="s">'/signup'</span>);
+    <span class="k">await</span> page.getByLabel(<span class="s">'Age'</span>).fill(age);
+    <span class="k">await</span> page.getByRole(<span class="s">'button'</span>, { name: <span class="s">'Create account'</span> }).click();
+    <span class="k">const</span> error = page.getByRole(<span class="s">'alert'</span>);
+    <span class="k">if</span> (ok) <span class="k">await</span> expect(error).toBeHidden();
+    <span class="k">else await</span> expect(error).toContainText(<span class="s">'18'</span>);
+  });
+}</pre>
+${CO('tip','Tip','Check a validation rule at the lowest level that owns it. Nine browser runs for one rule are slow; test all nine values at unit or API level and keep one UI case per partition to prove the message and wiring.')}`),
+  S('Decision tables',`<p>When conditions combine, list every combination and its outcome. The rules: shipping is free for members <i>or</i> for orders of 100 or more, and a coupon gives 10 % off only on orders of 100 or more. Three yes/no conditions give 2 × 2 × 2 = 8 combinations, and many share an outcome, so merge them (a dash means the condition does not matter).</p>
+${T(['Rule','Member','Coupon','Total ≥ 100','Shipping','Discount'],[
+   ['R1','–','Yes','Yes','Free','10 %'],
+   ['R2','–','No','Yes','Free','None'],
+   ['R3','Yes','–','No','Free','None'],
+   ['R4','No','–','No','Paid','None']])}
+<p>Eight combinations collapse to four rules, so four tests cover every distinct outcome. Building the table also exposes questions the specification never answered, such as what a coupon does on a 99.99 order. Add boundary checks on the total (99.99, 100.00) to the same tests.</p>`),
+  S('State-transition testing',`<p>When behaviour depends on history, model the states and the events that move between them. An order might go draft → submitted → approved → shipped, and can be cancelled before it ships.</p>
+${T(['From','Event','To','Expected'],[
+   ['Draft','Submit','Submitted','Allowed'],
+   ['Submitted','Approve','Approved','Allowed'],
+   ['Approved','Ship','Shipped','Allowed'],
+   ['Submitted or approved','Cancel','Cancelled','Allowed'],
+   ['Approved','Reopen','Draft','Refused'],
+   ['Shipped','Cancel','Cancelled','Refused'],
+   ['Cancelled','Approve','Approved','Refused']])}
+<p>Cover every allowed transition at least once, then try the refused ones. Each should be rejected and leave the state unchanged; this is where most state bugs hide.</p>
+<pre class="code"><span class="c">// orderId: an order created in this test and moved to “approved” through the API</span>
+test(<span class="s">'an approved order cannot be reopened'</span>, <span class="k">async</span> ({ request }) =&gt; {
+  <span class="k">const</span> res = <span class="k">await</span> request.post(<span class="s">'/api/orders/'</span> + orderId + <span class="s">'/reopen'</span>);
+  expect(res.status()).toBe(<span class="s">409</span>);                <span class="c">// refused (409 Conflict is a common choice)</span>
+
+  <span class="k">const</span> order = <span class="k">await</span> (<span class="k">await</span> request.get(<span class="s">'/api/orders/'</span> + orderId)).json();
+  expect(order.status).toBe(<span class="s">'approved'</span>);         <span class="c">// and nothing changed</span>
+});</pre>
+${CO('tip','Tip','Assert the state after a refused action, not only the error status. A 409 that still changed the order is a bug.')}`),
+  S('Pairwise testing',`<p>Three parameters with three values each give 3 × 3 × 3 = 27 combinations; ten parameters can give thousands. Most defects are triggered by a single value or by an interaction of two, so a <b>pairwise</b> set covers every pair of values at least once in far fewer tests. For the parameters below, 9 tests cover all pairs.</p>
+${T(['Parameter','Values'],[['Browser','Chromium, Firefox, WebKit'],['Plan','Free, Pro, Team'],['Locale','en, uk, pl']])}
+<p>Generate the set with a tool such as <b>PICT</b> or <b>allpairspy</b> and feed the rows to a data-driven test like the age table above. Both accept <b>constraints</b>, so impossible combinations (a locale that the Free plan does not offer) are never generated.</p>
+${CO('risk','Risk','Pairwise can miss a defect that needs three or more specific values together. Add the riskiest combinations by hand, especially those that handle money or personal data.')}`),
+  S('Error guessing and exploratory charters',`<p>Experience adds cases no technique produces. Common places to look:</p>
+${UL(['Double-click or double-submit a form','Press Back or Refresh right after submitting','Paste a very long text, an emoji or right-to-left text','Use quotes, angle brackets and accented characters','Open the same record in two tabs, or let the session expire mid-task','Use dates at the edges: 29 February, a daylight-saving change, the end of the year'])}
+<p>An <b>exploratory session</b> is time-boxed (30 to 60 minutes) and guided by a <b>charter</b>: <i>explore</i> an area <i>with</i> some resources <i>to discover</i> a risk. Record questions, bugs and new risks as you go.</p>
+${CO('note','Example charter','Explore checkout with expired cards and two browser tabs to discover payment-state problems.')}`),
+  S('Writing the cases down',`<p>A case is only reusable if someone else can run it. Keep a short, consistent format and mark what to automate.</p>
+${T(['ID','Technique','Type','Steps','Expected','Automate'],[
+   ['TC-001','Boundary value','Boundary','Enter age 17','Rejected; message names the range 18 to 65','Yes'],
+   ['TC-002','Decision table R3','Positive','Member, total 40, no coupon','Free shipping, no discount','Yes'],
+   ['TC-003','State transition','Negative','Reopen an approved order','Refused; order stays approved','Yes'],
+   ['TC-004','Exploratory charter','–','Two tabs, session expires mid-checkout','Notes, questions, bugs','No']])}
+${CO('tip','Tip','Automate cases that are stable, frequent and high-impact (see Strategy and risk-based automation). A charter stays manual by design.')}`),
+ ],
+ quiz:[
+  {q:'A quantity field accepts 1 to 10. Which set is the three-value boundary set for the upper edge?',o:['9, 10, 11','10 only','5, 10, 20','1, 10'],a:0,why:'Three-value boundary analysis tests the boundary and both neighbours: 9, 10 and 11.'},
+  {q:'Why does equivalence partitioning reduce the number of tests?',o:['It removes the need for expected results','One value represents a whole group the system treats the same way','It only tests valid input','It tests every possible value once'],a:1,why:'If every value in a partition behaves alike, one representative is enough to find a defect in that partition.'},
+  {q:'What does merging rows with identical outcomes in a decision table achieve?',o:['It removes conditions that matter','It makes the table longer','Fewer rules to test, with every distinct outcome still covered','It replaces boundary testing'],a:2,why:'Rules that differ only in an irrelevant condition collapse into one, so you test each distinct outcome once.'},
+  {q:'What should happen when an invalid state transition is attempted, such as reopening a shipped order?',o:['It should be accepted and logged','The state should reset to the start','It should be refused and leave the state unchanged','Nothing needs to be checked'],a:2,why:'An invalid transition must be rejected without side effects; checking that the state did not change catches half-applied actions.'},
+  {q:'3 browsers × 3 plans × 3 locales give 27 combinations. What does a pairwise set promise?',o:['Every combination of three values is tested','Every pair of values appears in at least one test, usually in far fewer tests','Only the most common browser is tested','Locale never matters'],a:1,why:'Pairwise covers all two-way interactions, which is where most combination defects appear, at a fraction of the full set.'},
+  {q:'Which is a weakness of pairwise testing?',o:['It cannot be automated','It needs more tests than all combinations','It only works for numbers','It can miss a defect that needs three or more specific values together'],a:3,why:'Pairwise covers pairs, not triples. Add high-risk combinations by hand.'},
+ ],src:['ctflpdf','pwparam','pict','allpairs']};
+
+/* ---------- new module: security testing for QA ---------- */
+const SEC_TESTING={id:'security-testing',track:'qual',title:'Security testing for QA',min:12,
+ sum:'A tester’s walk through the OWASP Top 10:2025: stay in scope, check headers and cookies, test authorisation with two users, and rate what you find.',
+ sections:[
+  S('What you’ll learn',UL(['Stay in scope: test only what you own or are authorised to test, and never destructively','Use the OWASP Top 10:2025 as a tester’s checklist','Check security headers and cookie flags in an automated test','Write a two-user authorisation test (BOLA / IDOR)','Check dependencies and secrets, and rate a finding by impact × likelihood'])),
+  S('Scope and safety first',`${UL(['Test only systems you own or have written permission to test. Never test third-party systems, or production, without it.','Prefer a staging environment with test accounts and test data.','Probe safely: harmless markers and non-executing payloads. No denial-of-service, no data exfiltration, no real payments.','Label every result honestly: <b>Confirmed</b> (reproduced), <b>Suspected</b> (indicators only) or <b>Not tested</b>.','Report secrets by location and type, never by value.'])}
+${CO('risk','Risk','A scanner alert is a lead, not a finding. Reproduce it safely, or report it as Suspected.')}`),
+  S('OWASP Top 10:2025 as a tester’s checklist',`${T(['ID','Category','Safe things to probe'],[
+   ['A01','Broken Access Control','Change ids in URLs and bodies; open admin routes as a normal user; URL-fetching features (SSRF now sits here)'],
+   ['A02','Security Misconfiguration','Default accounts, debug mode, verbose errors, exposed consoles, missing headers'],
+   ['A03','Software Supply Chain Failures','Unpinned or unmaintained dependencies, no lockfile, secrets in CI (new in 2025)'],
+   ['A04','Cryptographic Failures','HTTP instead of HTTPS, tokens in URLs, sensitive data stored unprotected'],
+   ['A05','Injection','Harmless markers in inputs and where they reappear: pages, queries, commands, templates'],
+   ['A06','Insecure Design','Missing rate limits, skipped steps, negative quantities, reusable coupons'],
+   ['A07','Authentication Failures','No lockout, sessions not ended on logout, user enumeration through error messages'],
+   ['A08','Software or Data Integrity Failures','Unsigned updates, unsafe deserialisation, third-party scripts without integrity checks'],
+   ['A09','Security Logging and Alerting Failures','Are logins and access denials logged? Do logs contain secrets?'],
+   ['A10','Mishandling of Exceptional Conditions','Malformed, oversized and truncated input: do errors fail open or leak internals? (new in 2025)']])}
+${CO('note','Key idea','The 2025 edition added A03 and A10 and folded server-side request forgery (SSRF) into A01. Older reports use 2021 names; “Vulnerable and Outdated Components” maps to A03. Check owasp.org for the current list.')}`),
+  S('Headers and cookies in a test',`<p>Browsers switch protections on from response headers, so they are cheap to assert.</p>
+${T(['Header','What it does'],[
+   ['Content-Security-Policy','Limits where scripts, frames and other content may load from; a main defence against XSS. Its <code class="i">frame-ancestors</code> directive says who may embed the page and replaces X-Frame-Options'],
+   ['Strict-Transport-Security','Tells browsers to use HTTPS only (ignored over plain HTTP)'],
+   ['X-Content-Type-Options: nosniff','Stops the browser guessing a file’s type'],
+   ['Referrer-Policy','Controls how much of the URL is sent to other sites'],
+   ['Permissions-Policy','Turns off browser features the app does not use']])}
+<pre class="code">test(<span class="s">'required security headers are present'</span>, <span class="k">async</span> ({ request }) =&gt; {
+  <span class="k">const</span> h = (<span class="k">await</span> request.get(<span class="s">'/'</span>)).headers();      <span class="c">// header names are lower-case</span>
+  expect(h[<span class="s">'content-security-policy'</span>]).toBeTruthy();
+  expect(h[<span class="s">'strict-transport-security'</span>]).toContain(<span class="s">'max-age='</span>);
+  expect(h[<span class="s">'x-content-type-options'</span>]).toBe(<span class="s">'nosniff'</span>);
+  expect(h[<span class="s">'referrer-policy'</span>]).toBeTruthy();
+});
+
+test(<span class="s">'the session cookie is locked down'</span>, <span class="k">async</span> ({ page, context }) =&gt; {
+  <span class="k">await</span> page.goto(<span class="s">'/login'</span>);                        <span class="c">// sign in with a test account here</span>
+  <span class="k">const</span> session = (<span class="k">await</span> context.cookies()).find(c =&gt; c.name === <span class="s">'session'</span>);
+  expect(session?.httpOnly).toBe(<span class="k">true</span>);
+  expect(session?.secure).toBe(<span class="k">true</span>);
+  expect(session?.sameSite).not.toBe(<span class="s">'None'</span>);
+});</pre>
+${CO('tip','Tip','A missing header is usually Low or Informational on its own: rate it by what it exposes. Assert the headers you decided to require, so a regression is caught.')}`),
+  S('Authorisation: two users, one object',`<p>Access control is the most common serious web flaw (OWASP A01, and BOLA in the API list). Test it with two accounts: user A creates a private object, then user B tries to read, change and delete it.</p>
+<pre class="code">test(<span class="s">'user B cannot read user A’s order'</span>, <span class="k">async</span> ({ playwright }) =&gt; {
+  <span class="k">const</span> baseURL = process.env.BASE_URL;
+  <span class="k">const</span> a = <span class="k">await</span> playwright.request.newContext({ baseURL, storageState: <span class="s">'auth/a.json'</span> });
+  <span class="k">const</span> b = <span class="k">await</span> playwright.request.newContext({ baseURL, storageState: <span class="s">'auth/b.json'</span> });
+  <span class="k">const</span> order = <span class="k">await</span> (<span class="k">await</span> a.post(<span class="s">'/api/orders'</span>, { data: { sku: <span class="s">'X1'</span> } })).json();
+
+  <span class="k">const</span> res = <span class="k">await</span> b.get(<span class="s">'/api/orders/'</span> + order.id);
+  expect([<span class="s">403</span>, <span class="s">404</span>]).toContain(res.status());    <span class="c">// never 200 with A’s data</span>
+});</pre>
+<p>Repeat for update and delete, for an admin-only route used as a normal user (vertical escalation) and for a second tenant. The <a href="#api-testing">API testing</a> module covers the OWASP API risks in more detail.</p>`),
+  S('Dependencies and secrets',UL(['Run the package manager’s audit (<code class="i">npm audit</code>, <code class="i">pip-audit</code>, <code class="i">dotnet list package --vulnerable</code>) and cross-check with osv.dev. Do not call a dependency vulnerable without an advisory.','Commit lockfiles, pin versions and install in CI with <code class="i">npm ci</code>.','Scan the repository and its history for secrets (for example with gitleaks). Keep <code class="i">.env</code> files out of Git.','Pin third-party CI actions and container images to a version or digest.','Treat a leaked secret as compromised: rotate it. Deleting the commit is not enough.'])),
+  S('Rating a finding',`<p>This hub uses a simple convention: score <b>impact</b> (1 to 5) times <b>likelihood</b> (1 to 5) and read the band.</p>
+${T(['Score','Severity'],[['20–25','Critical'],['12–19','High'],['6–11','Medium'],['2–5','Low'],['0–1','Informational']])}
+<p>Another user’s order readable by changing an id: impact 5 × likelihood 4 = 20, <b>Critical</b>. A missing Referrer-Policy on an internal tool: 1 × 2 = 2, <b>Low</b>. Raise likelihood for internet exposure, lower it when exposure is localhost-only or another control already blocks the attack, and say which adjustment you used.</p>
+${CO('note','Key idea','Confidence (High, Medium, Low) is reported separately and does not change severity. For known vulnerabilities in third-party software, use the CVSS score published with the advisory instead of scoring it yourself.')}`),
+ ],
+ quiz:[
+  {q:'A scanner reports possible SQL injection and you have not reproduced it. How do you report it?',o:['Confirmed, Critical','Informational, always','Suspected, until you reproduce it safely','Not worth reporting'],a:2,why:'An indicator without a reproduced effect is Suspected. Only a reproduced issue is Confirmed.'},
+  {q:'User B requests user A’s order by id and receives A’s data with a 200. Which OWASP Top 10:2025 category fits best?',o:['A02 Security Misconfiguration','A05 Injection','A01 Broken Access Control','A10 Mishandling of Exceptional Conditions'],a:2,why:'Reading another user’s object by changing an id is a broken access control flaw (BOLA / IDOR).'},
+  {q:'Which two categories are new in the OWASP Top 10:2025?',o:['Injection and Insecure Design','Broken Access Control and Cryptographic Failures','Security Logging and SSRF','Software Supply Chain Failures and Mishandling of Exceptional Conditions'],a:3,why:'A03 and A10 are new in 2025; SSRF was folded into A01.'},
+  {q:'Which response header tells browsers to use HTTPS only for future visits?',o:['Strict-Transport-Security','Referrer-Policy','X-Content-Type-Options','Permissions-Policy'],a:0,why:'HSTS makes the browser upgrade to HTTPS. Browsers ignore it when it is received over plain HTTP.'},
+  {q:'Impact 4 and likelihood 4 give a score of 16. Which severity band is that (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',o:['Low','Medium','Critical','High'],a:3,why:'4 × 4 = 16, which falls in the 12–19 band: High.'},
+  {q:'A session cookie lacks the HttpOnly flag. What does that allow?',o:['The cookie cannot be sent over HTTPS','Page scripts to read the cookie, so an XSS flaw can steal the session','Other sites to embed the page','The cookie to expire immediately'],a:1,why:'HttpOnly hides the cookie from JavaScript. Without it, injected script can read and exfiltrate the session.'},
+ ],src:['owasp25','owaspapi','owaspheaders','mdncsp','osv','cvss','pwapi']};
+
+/* ---------- new module: defect reports and QA reports ---------- */
+const DEFECT_REPORTING={id:'defect-reporting',track:'qual',title:'Defect reports and QA reports',min:9,
+ sum:'Write a defect another person can reproduce, tell severity from priority, label evidence honestly and finish with a verdict chosen by fixed rules.',
+ sections:[
+  S('What you’ll learn',UL(['Write a defect report another person can reproduce without asking you questions','Tell severity from priority','Label every claim Confirmed, Suspected or Not tested','Choose a final QA status with fixed decision rules','Lay out a report a decision-maker can read in two minutes'])),
+  S('A defect someone else can reproduce',`<p>A report is useful when a developer who has never seen the problem can reproduce it from the text alone. Most reports that bounce back are missing the same few things.</p>
+${T(['Field','What to write'],[
+   ['Title','What is wrong and where, in one line'],
+   ['Environment','Browser and OS, application version, test account or role'],
+   ['Preconditions','The state needed before step 1'],
+   ['Steps','Numbered and exact, starting from a known state'],
+   ['Expected / actual','Both, side by side'],
+   ['Evidence','Screenshot, trace, request and response, log lines: real, with secrets masked'],
+   ['Reproducible','Always, intermittent (how often) or not reproduced'],
+   ['Severity and priority','The impact, with a reason; how soon it should be fixed']])}
+${T(['Weak','Better'],[
+   ['“Checkout is broken”','“Checkout: the Pay button does nothing for a saved Visa card (Chromium, build 2.14.1)”'],
+   ['“It fails sometimes”','“Fails in 3 of 10 runs; always passes when the cart holds one item”'],
+   ['“Should work”','“Expected: confirmation page. Actual: stays on payment; the console shows HTTP 500 from /api/pay”']])}
+${CO('tip','Tip','A Playwright trace or a short screen recording often replaces a page of description. Attach it.')}`),
+  S('Severity and priority',`<p><b>Severity</b> is the impact of the defect if it ships. <b>Priority</b> is how soon it should be fixed. They are related but different, and usually have different owners: QA proposes severity, the product owner sets priority.</p>
+${T(['Severity','Meaning','Example'],[
+   ['Critical','Data loss or corruption, a security breach, or a core journey impossible with no workaround','Any signed-in user can read another user’s orders'],
+   ['High','A major function fails or a serious weakness exists, and the workaround is hard or risky','Checkout fails for one payment method'],
+   ['Medium','Partial loss of function, or a real weakness with a workaround or limited exposure','A filter ignores one criterion'],
+   ['Low','A minor defect with negligible impact','A label is misaligned'],
+   ['Informational','An observation or improvement, not a defect','An optional response header is missing']])}
+${T(['Priority','Meaning'],[['P1','Fix before release'],['P2','Fix in the current cycle'],['P3','Schedule'],['P4','Backlog']])}
+${CO('note','Key idea','A typo in the company name on the home page is Low severity, yet P1 the day before a launch. A crash in an export used once a year may be High severity but only P3. Always give severity with a one-line reason.')}`),
+  S('Confirmed, Suspected, Not tested',`<p>Every claim in a report carries one of three labels, so readers know how far to trust it.</p>
+${UL(['<b>Confirmed</b>: reproduced, with evidence you can show.','<b>Suspected</b>: there are indicators, but the effect is not proven. A scanner alert or a code smell starts here.','<b>Not tested</b>: you did not check it. Say so, and say why.'])}
+<p>Three rules keep reports honest: absence of evidence is not evidence of absence; never invent logs, versions or results; keep observations apart from assumptions. When you score a finding, use impact × likelihood as in <a href="#security-testing">Security testing for QA</a>, and report your confidence separately.</p>`),
+  S('The final status',`<p>End a QA report with one status chosen by fixed rules, so two people reading the same findings reach the same verdict. Check the rules in order; the first match decides.</p>
+${T(['Order','Status','Use when'],[
+   ['1','FAIL','Any Confirmed Critical or High finding, or a core user journey is Confirmed broken'],
+   ['2','NOT ENOUGH EVIDENCE','The target was unreachable, or too little could be verified to support any conclusion'],
+   ['3','PARTIALLY VERIFIED','Part of the scope is blocked or not tested, or a Suspected Critical or High finding is unresolved (and nothing Confirmed Critical or High)'],
+   ['4','PASS WITH FINDINGS','The whole scope was verified and only Medium, Low or Informational findings remain open'],
+   ['5','PASS','The whole scope was verified and nothing above Informational remains open']])}
+${CO('risk','Risk','Never choose PASS merely because no defects were found. PASS needs the whole requested scope to be verified.')}`),
+  S('Report layout',`<p>Put the verdict first. A reader should be able to stop after the first section and still act.</p>
+${T(['#','Section','What it holds'],[
+   ['1','Executive summary','The verdict, the top 3 issues and the one next action'],
+   ['2','Scope and limits','What was checked, what was not (and why), assumptions, tools'],
+   ['3','Findings overview','ID, severity, area, title, confidence'],
+   ['4','Detailed findings','Evidence, impact, suggested fix, how to verify it'],
+   ['5','What looked healthy','Areas checked with nothing to report'],
+   ['6','Recommendations','Ordered by severity and effort'],
+   ['7','Follow-up tests','Negative, boundary and exploratory'],
+   ['8','What else to check?','Gaps worth a second look']])}
+${CO('tip','Tip','Section 5 matters. Reporting a clean area as clean tells readers where they can stop worrying. For each suggested fix, add its risk, how to undo it and how to confirm it worked.')}`),
+ ],
+ quiz:[
+  {q:'Which statement about severity and priority is correct?',o:['Severity is how soon to fix it; priority is the impact','They mean the same thing','Severity is the impact if it ships; priority is how soon to fix it','Severity is set by developers only'],a:2,why:'Severity describes impact; priority is a scheduling decision. A cosmetic defect can be urgent, and a serious one can wait.'},
+  {q:'A typo in the company name on the home page the day before a launch is best described as…',o:['High severity, P4','Critical severity, P3','Informational, no priority','Low severity, P1'],a:3,why:'The impact is small (Low) but the timing makes it urgent (P1).'},
+  {q:'A report says “Checkout is broken sometimes”. What is the most useful missing information?',o:['Who caused it','Exact steps, environment, expected versus actual result and how often it happens','A longer title','A guess at the root cause'],a:1,why:'Reproducible steps and context let a developer see the problem. Blame and guesses do not.'},
+  {q:'You reproduced a flaw that lets one user read another’s orders. Which label applies?',o:['Suspected','Not tested','Confirmed','Informational'],a:2,why:'A reproduced finding with evidence is Confirmed.'},
+  {q:'The whole scope was verified; one Medium and two Low findings remain open; nothing High or Critical. Which status?',o:['PASS','PARTIALLY VERIFIED','FAIL','PASS WITH FINDINGS'],a:3,why:'Whole scope verified and only Medium, Low or Informational findings open: rule 4, PASS WITH FINDINGS.'},
+  {q:'One service was unavailable, so half the scope was not tested. The other half was verified with no Confirmed Critical or High findings. Which status?',o:['PASS WITH FINDINGS','NOT ENOUGH EVIDENCE','PARTIALLY VERIFIED','PASS'],a:2,why:'Part of the scope is Not tested and nothing Confirmed Critical or High exists, so rule 3 applies. Rule 2 is for when too little could be verified to conclude anything.'},
+ ],src:['ctflpdf','ctfl','owasp25']};
+
+MODULES.splice(MODULES.findIndex(m=>m.id==='strategy-risk')+1,0,TEST_DESIGN);
+MODULES.splice(MODULES.findIndex(m=>m.id==='security-performance')+1,0,SEC_TESTING);
+MODULES.splice(MODULES.findIndex(m=>m.id==='failure-modes')+1,0,DEFECT_REPORTING);
+
+/* ---------- new flashcards ---------- */
+GLOSSARY.push(
+ ['Decision table','A grid of condition combinations and their outcomes; identical rows are merged so each distinct outcome is tested once.','qual'],
+ ['State-transition testing','Testing the allowed and refused moves between states, such as an order going from draft to approved.','qual'],
+ ['Pairwise testing','Covering every pair of parameter values at least once instead of every combination; tools such as PICT generate the sets.','qual'],
+ ['Error guessing','Choosing cases from experience of where software usually breaks: double-submit, huge input, expired sessions.','qual'],
+ ['Test charter','A one-line mission for a time-boxed exploratory session: explore an area, with resources, to discover a risk.','qual'],
+ ['Content-Security-Policy','A response header that limits where a page may load scripts, frames and other content from; a main defence against XSS.','qual'],
+ ['Software supply chain failure','OWASP Top 10:2025 A03: risk from dependencies, build pipelines and distribution, such as unpinned or tampered packages.','qual'],
+ ['Confirmed vs suspected','Evidence labels in a QA report: Confirmed means reproduced with evidence; Suspected means indicators only.','qual'],
+);
+Object.assign(FC_PIC,{'Decision table':'table','State-transition testing':'branch','Pairwise testing':'split','Error guessing':'target','Test charter':'doc','Content-Security-Policy':'shield','Software supply chain failure':'blocks','Confirmed vs suspected':'eye'});
+GLOSSARY.forEach(g=>{g[3]=FC_PIC[g[0]]||FC_TRACK_PIC[g[2]]||'check';});
+
+/* ---------- new exam-only questions ---------- */
+EXAM_BANK.push(
+ {t:'qual',k:3,q:'A password must be 8 to 64 characters. Which lengths form the three-value boundary set?',o:['7, 8, 9 and 63, 64, 65','8 and 64 only','1, 32, 100','0, 8, 64'],a:0,why:'Three-value analysis tests each boundary and both of its neighbours.'},
+ {t:'qual',k:2,q:'What does a pairwise test set guarantee?',o:['Every three-way combination is covered','All defects are found','Every pair of parameter values appears in at least one test','Only valid combinations are used'],a:2,why:'Pairwise covers all two-way interactions with far fewer tests than the full product.'},
+ {t:'qual',k:3,q:'A decision table has three yes/no conditions. How many combinations exist before merging identical outcomes?',o:['3','8','6','9'],a:1,why:'2 × 2 × 2 = 8.'},
+ {t:'qual',k:2,q:'A scanner flags possible XSS and the tester has not reproduced it. Which label fits?',o:['Confirmed','Suspected','Fixed','Informational only'],a:1,why:'Indicators without a reproduced effect are Suspected.'},
+ {t:'qual',k:2,q:'Which response header limits where a page may load scripts from?',o:['Referrer-Policy','Cache-Control','Content-Security-Policy','Accept-Language'],a:2,why:'Content-Security-Policy restricts script, frame and other content sources.'},
+ {t:'qual',k:3,q:'Impact 5 and likelihood 3 give 15. Which band is that (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',o:['Critical','High','Medium','Low'],a:1,why:'5 × 3 = 15 falls in the 12–19 band: High.'},
+);
 /* ================= i18n: language choice, UI strings, content overlays ================= */
 const LANGS=[['en','English'],['uk','Українська'],['pl','Polski'],['es','Español']];
 const LANG_KEY='automation-hub.lang';
@@ -2440,6 +2699,8 @@ function applyTR(){
 
 /* ---------- UI strings ---------- */
 UI.en={
+ exportProgress:'Export progress',importProgress:'Import progress',importOk:(n,m)=>`Imported: ${n} / ${m} modules done`,importBad:'Not a valid progress file',
+ weakTitle:'Worth another look',weakBlurb:'Modules where a quiz answer was wrong. Re-read them, then try the mixed quiz or a track exam.',weakWrong:n=>n===1?'1 answer wrong':`${n} answers wrong`,
  language:'Language',yourProgress:'Your progress',searchPh:'Search modules…',resetProgress:'Reset progress',confirmReset:'Click again to confirm',progressReset:'Progress reset',menu:'Menu',skipLink:'Skip to main content',timeLow:m=>`${m} min left`,navAria:'Course navigation',
  home:'Home',noMatch:f=>`No module mentions “${f}”.`,practice:'Practice',doneAria:'done',doneBadge:'✓ Done',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MODULE ${n}`,min:n=>`${n} min`,
  heroLabel:'A study hub for QA engineers',heroTitle:'Automate the right checks, at the right level.',
@@ -2490,6 +2751,8 @@ UI.en={
 };
 
 UI.uk={
+ exportProgress:'Експортувати прогрес',importProgress:'Імпортувати прогрес',importOk:(n,m)=>`Імпортовано: ${n} / ${m} модулів пройдено`,importBad:'Це не коректний файл прогресу',
+ weakTitle:'Варто переглянути ще раз',weakBlurb:'Модулі, де відповідь у квізі була хибною. Перечитайте їх, а потім спробуйте змішаний тест або іспит за напрямом.',weakWrong:n=>`Хибних відповідей: ${n}`,
  language:'Мова',yourProgress:'Ваш прогрес',searchPh:'Пошук модулів…',resetProgress:'Скинути прогрес',confirmReset:'Натисніть ще раз для підтвердження',progressReset:'Прогрес скинуто',menu:'Меню',skipLink:'Перейти до основного вмісту',timeLow:m=>`Залишилось ${m} хв`,navAria:'Навігація курсом',
  home:'Головна',noMatch:f=>`Жоден модуль не згадує «${f}».`,practice:'Практика',doneAria:'пройдено',doneBadge:'✓ Пройдено',quizBadge:(r,q)=>`~ ${r}/${q} тест`,moduleEyebrow:n=>`МОДУЛЬ ${n}`,min:n=>`${n} хв`,
  heroLabel:'Навчальний хаб для QA-інженерів',heroTitle:'Автоматизуйте правильні перевірки на правильному рівні.',
@@ -2540,6 +2803,8 @@ UI.uk={
 };
 
 UI.pl={
+ exportProgress:'Eksportuj postęp',importProgress:'Importuj postęp',importOk:(n,m)=>`Zaimportowano: ${n} / ${m} ukończonych modułów`,importBad:'To nie jest prawidłowy plik postępu',
+ weakTitle:'Warto wrócić',weakBlurb:'Moduły, w których odpowiedź w quizie była błędna. Przeczytaj je ponownie, a potem spróbuj quizu mieszanego lub egzaminu ze ścieżki.',weakWrong:n=>`Błędne odpowiedzi: ${n}`,
  language:'Język',yourProgress:'Twój postęp',searchPh:'Szukaj modułów…',resetProgress:'Zresetuj postęp',confirmReset:'Kliknij ponownie, aby potwierdzić',progressReset:'Postęp zresetowany',menu:'Menu',skipLink:'Przejdź do głównej treści',timeLow:m=>`Zostało ${m} min`,navAria:'Nawigacja kursu',
  home:'Start',noMatch:f=>`Żaden moduł nie wspomina „${f}”.`,practice:'Praktyka',doneAria:'ukończono',doneBadge:'✓ Ukończono',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MODUŁ ${n}`,min:n=>`${n} min`,
  heroLabel:'Centrum nauki dla inżynierów QA',heroTitle:'Automatyzuj właściwe sprawdzenia na właściwym poziomie.',
@@ -2590,6 +2855,8 @@ UI.pl={
 };
 
 UI.es={
+ exportProgress:'Exportar progreso',importProgress:'Importar progreso',importOk:(n,m)=>`Importado: ${n} / ${m} módulos completados`,importBad:'No es un archivo de progreso válido',
+ weakTitle:'Merece otra mirada',weakBlurb:'Módulos donde una respuesta del cuestionario fue incorrecta. Vuelve a leerlos y prueba el quiz mixto o un examen por área.',weakWrong:n=>`Respuestas incorrectas: ${n}`,
  language:'Idioma',yourProgress:'Tu progreso',searchPh:'Buscar módulos…',resetProgress:'Reiniciar progreso',confirmReset:'Haz clic de nuevo para confirmar',progressReset:'Progreso reiniciado',menu:'Menú',skipLink:'Saltar al contenido principal',timeLow:m=>`Quedan ${m} min`,navAria:'Navegación del curso',
  home:'Inicio',noMatch:f=>`Ningún módulo menciona «${f}».`,practice:'Práctica',doneAria:'completado',doneBadge:'✓ Completado',quizBadge:(r,q)=>`~ ${r}/${q} quiz`,moduleEyebrow:n=>`MÓDULO ${n}`,min:n=>`${n} min`,
  heroLabel:'Un centro de estudio para ingenieros de QA',heroTitle:'Automatiza las comprobaciones correctas, en el nivel correcto.',
@@ -3869,6 +4136,202 @@ ${T(['Verás…','Significa…','Cubierto en'],[
 ${CO('note','Usar esto con responsabilidad','Manejar con soltura estos términos y saber discutir sus compromisos importa más que memorizar definiciones. Si usas herramientas de IA en una prueba de entrevista para casa, dilo abiertamente y prepárate para explicar qué revisaste y qué cambiaste.')}
 </section>`;
 })();
+/* Español — v6: diseño de pruebas, pruebas de seguridad para QA, defectos e informes de QA */
+TR.es=TR.es||{modules:{}};
+(()=>{const M=TR.es.modules;
+
+M['test-design']={title:'Técnicas de diseño de pruebas',
+ sum:'Particiones de equivalencia, valores límite, tablas de decisión, transiciones de estado y combinaciones por pares: cómo elegir un conjunto pequeño de casos que aun así encuentre la mayoría de los defectos.',
+ sections:[
+  ['Qué aprenderás',UL(['Dividir una entrada en particiones de equivalencia y elegir valores límite','Reducir una tabla de decisión al conjunto de reglas más pequeño','Probar transiciones de estado válidas e inválidas','Frenar una explosión combinatoria con pruebas por pares','Escribir los casos elegidos y convertirlos en pruebas guiadas por datos'])],
+  ['Primero diseño, después automatización',`<p>Playwright, Cypress y Selenium ejecutan comprobaciones. No deciden <i>cuáles</i> merece la pena ejecutar. Las técnicas de diseño de pruebas son métodos repetibles para elegir un conjunto pequeño de casos que aun así encuentre la mayoría de los defectos. Responden a «¿qué entradas, qué estados, qué combinaciones?» antes de escribir una sola línea de código.</p>
+${T(['Técnica','Úsala cuando','Ejemplo'],[
+   ['Partición de equivalencia','Las entradas forman grupos que el sistema trata igual','Edad por debajo, dentro y por encima del rango permitido'],
+   ['Análisis de valores límite','Hay rangos y límites; aquí viven los errores de «uno de más o de menos»','17, 18, 19 y 64, 65, 66'],
+   ['Tabla de decisión','Varias condiciones se combinan y dan resultados distintos','Socio × cupón × importe del pedido'],
+   ['Transición de estado','El comportamiento depende del historial o del estado','Pedido: borrador → enviado → aprobado'],
+   ['Pruebas por pares','Muchos parámetros con varios valores cada uno','Navegador × plan × idioma'],
+   ['Adivinación de errores, exploratoria','La experiencia indica dónde se rompe','Doble clic en enviar, pegar un texto enorme']])}
+${CO('note','Idea clave','El temario ISTQB Foundation (v4.0) incluye la partición de equivalencia, el análisis de valores límite, las tablas de decisión y las pruebas de transición de estado como técnicas de caja negra, y la adivinación de errores y las pruebas exploratorias como técnicas basadas en la experiencia. Las pruebas por pares no figuran en esa lista, pero se usan mucho en la práctica.')}`],
+  ['Particiones de equivalencia y valores límite',`<p>Un formulario de registro acepta una edad de 18 a 65. La <b>partición de equivalencia</b> agrupa las entradas que el sistema debe tratar igual y prueba un valor de cada grupo. El <b>análisis de valores límite</b> añade los extremos de cada rango válido, porque los errores de «uno de más o de menos» (<code class="i">&gt;</code> donde se quería <code class="i">&gt;=</code>) se concentran ahí.</p>
+${T(['Partición','Valor de ejemplo','Resultado esperado'],[
+   ['Por debajo del rango (inválido)','10','Rechazado; el mensaje indica el rango de 18 a 65'],
+   ['Dentro del rango (válido)','40','Aceptado'],
+   ['Por encima del rango (inválido)','80','Rechazado'],
+   ['No es un número','abc','Rechazado, sin fallo'],
+   ['Vacío','(campo vacío)','Rechazado: obligatorio']])}
+<p>El conjunto límite de tres valores para 18–65 es <b>17, 18, 19</b> y <b>64, 65, 66</b>. Pasa los casos a una única prueba guiada por datos:</p>
+${P(0)}
+${CO('tip','Consejo','Comprueba una regla de validación en el nivel más bajo que la posea. Nueve ejecuciones en el navegador para una regla son lentas: prueba los nueve valores a nivel unitario o de API y deja un caso de UI por partición para demostrar el mensaje y la conexión.')}`],
+  ['Tablas de decisión',`<p>Cuando las condiciones se combinan, enumera cada combinación y su resultado. Las reglas: el envío es gratis para socios <i>o</i> para pedidos de 100 o más, y un cupón da un 10 % de descuento solo en pedidos de 100 o más. Tres condiciones sí/no dan 2 × 2 × 2 = 8 combinaciones, y muchas comparten resultado, así que se fusionan (un guion significa que la condición no importa).</p>
+${T(['Regla','Socio','Cupón','Total ≥ 100','Envío','Descuento'],[
+   ['R1','–','Sí','Sí','Gratis','10 %'],
+   ['R2','–','No','Sí','Gratis','Ninguno'],
+   ['R3','Sí','–','No','Gratis','Ninguno'],
+   ['R4','No','–','No','De pago','Ninguno']])}
+<p>Ocho combinaciones se reducen a cuatro reglas, así que cuatro pruebas cubren cada resultado distinto. Construir la tabla también saca a la luz preguntas que la especificación nunca respondió, como qué hace un cupón en un pedido de 99,99. Añade comprobaciones límite del total (99,99; 100,00) a las mismas pruebas.</p>`],
+  ['Pruebas de transición de estado',`<p>Cuando el comportamiento depende del historial, modela los estados y los eventos que mueven entre ellos. Un pedido puede pasar de borrador → enviado → aprobado → despachado, y puede cancelarse antes de despacharse.</p>
+${T(['Desde','Evento','Hasta','Esperado'],[
+   ['Borrador','Enviar','Enviado','Permitido'],
+   ['Enviado','Aprobar','Aprobado','Permitido'],
+   ['Aprobado','Despachar','Despachado','Permitido'],
+   ['Enviado o aprobado','Cancelar','Cancelado','Permitido'],
+   ['Aprobado','Reabrir','Borrador','Rechazado'],
+   ['Despachado','Cancelar','Cancelado','Rechazado'],
+   ['Cancelado','Aprobar','Aprobado','Rechazado']])}
+<p>Cubre cada transición permitida al menos una vez y luego prueba las rechazadas. Cada una debe ser rechazada y dejar el estado intacto; aquí se esconden la mayoría de los errores de estado.</p>
+${P(0)}
+${CO('tip','Consejo','Comprueba el estado después de una acción rechazada, no solo el código de error. Un 409 tras el cual el pedido aun así cambió es un error.')}`],
+  ['Pruebas por pares',`<p>Tres parámetros con tres valores cada uno dan 3 × 3 × 3 = 27 combinaciones; diez parámetros pueden dar miles. La mayoría de los defectos los provoca un solo valor o la interacción de dos, así que un conjunto <b>por pares</b> cubre cada par de valores al menos una vez con muchas menos pruebas. Para los parámetros de abajo, 9 pruebas cubren todos los pares.</p>
+${T(['Parámetro','Valores'],[['Navegador','Chromium, Firefox, WebKit'],['Plan','Free, Pro, Team'],['Idioma','en, uk, pl']])}
+<p>Genera el conjunto con una herramienta como <b>PICT</b> o <b>allpairspy</b> y pasa las filas a una prueba guiada por datos como la tabla de edades de arriba. Ambas aceptan <b>restricciones</b>, así que las combinaciones imposibles (un idioma que el plan Free no ofrece) nunca se generan.</p>
+${CO('risk','Riesgo','Las pruebas por pares pueden pasar por alto un defecto que necesita tres o más valores concretos a la vez. Añade a mano las combinaciones más arriesgadas, sobre todo las que manejan dinero o datos personales.')}`],
+  ['Adivinación de errores y cartas exploratorias',`<p>La experiencia añade casos que ninguna técnica produce. Lugares habituales donde mirar:</p>
+${UL(['Hacer doble clic o enviar dos veces un formulario','Pulsar Atrás o Actualizar justo después de enviar','Pegar un texto muy largo, un emoji o texto de derecha a izquierda','Usar comillas, corchetes angulares y letras con acentos','Abrir el mismo registro en dos pestañas o dejar caducar la sesión a mitad de la tarea','Usar fechas en los extremos: 29 de febrero, un cambio de hora, fin de año'])}
+<p>Una <b>sesión exploratoria</b> tiene el tiempo acotado (30 a 60 minutos) y se guía por una <b>carta</b> (charter): <i>explora</i> un área <i>con</i> ciertos recursos <i>para descubrir</i> un riesgo. Anota preguntas, errores y riesgos nuevos sobre la marcha.</p>
+${CO('note','Carta de ejemplo','Explora el pago con tarjetas caducadas y dos pestañas del navegador para descubrir problemas del estado del pago.')}`],
+  ['Escribir los casos',`<p>Un caso solo es reutilizable si otra persona puede ejecutarlo. Mantén un formato corto y coherente y marca qué automatizar.</p>
+${T(['ID','Técnica','Tipo','Pasos','Esperado','Automatizar'],[
+   ['TC-001','Valor límite','Límite','Introducir edad 17','Rechazado; el mensaje indica el rango de 18 a 65','Sí'],
+   ['TC-002','Tabla de decisión R3','Positivo','Socio, total 40, sin cupón','Envío gratis, sin descuento','Sí'],
+   ['TC-003','Transición de estado','Negativo','Reabrir un pedido aprobado','Rechazado; el pedido sigue aprobado','Sí'],
+   ['TC-004','Carta exploratoria','–','Dos pestañas, la sesión caduca durante el pago','Notas, preguntas, errores','No']])}
+${CO('tip','Consejo','Automatiza los casos estables, frecuentes y de alto impacto (ver «Estrategia y automatización basada en riesgos»). Una carta exploratoria sigue siendo manual por diseño.')}`],
+ ],
+ quiz:[
+  ['Un campo de cantidad acepta de 1 a 10. ¿Qué conjunto es el límite de tres valores para el extremo superior?',['9, 10, 11','Solo 10','5, 10, 20','1, 10'],'El análisis de tres valores prueba el límite y sus dos vecinos: 9, 10 y 11.'],
+  ['¿Por qué la partición de equivalencia reduce el número de pruebas?',['Elimina la necesidad de resultados esperados','Un valor representa a todo un grupo que el sistema trata igual','Solo prueba entradas válidas','Prueba cada valor posible una vez'],'Si todos los valores de una partición se comportan igual, un representante basta para encontrar un defecto en esa partición.'],
+  ['¿Qué consigue fusionar filas con resultados idénticos en una tabla de decisión?',['Elimina condiciones que importan','Alarga la tabla','Menos reglas que probar, con cada resultado distinto aún cubierto','Sustituye al análisis de valores límite'],'Las reglas que solo difieren en una condición irrelevante se funden en una, así que pruebas cada resultado distinto una vez.'],
+  ['¿Qué debería pasar al intentar una transición de estado inválida, como reabrir un pedido despachado?',['Debería aceptarse y registrarse','El estado debería volver al inicio','Debería rechazarse y dejar el estado intacto','No hace falta comprobar nada'],'Una transición inválida debe rechazarse sin efectos secundarios; comprobar que el estado no cambió detecta acciones aplicadas a medias.'],
+  ['3 navegadores × 3 planes × 3 idiomas dan 27 combinaciones. ¿Qué promete un conjunto por pares?',['Se prueba cada combinación de tres valores','Cada par de valores aparece en al menos una prueba, normalmente con muchas menos pruebas','Solo se prueba el navegador más común','El idioma nunca importa'],'Las pruebas por pares cubren todas las interacciones de dos factores, donde aparece la mayoría de los defectos combinatorios, con una fracción del conjunto completo.'],
+  ['¿Cuál es una debilidad de las pruebas por pares?',['No se pueden automatizar','Necesitan más pruebas que todas las combinaciones','Solo funcionan con números','Pueden pasar por alto un defecto que necesita tres o más valores concretos a la vez'],'Las pruebas por pares cubren pares, no tríos. Añade a mano las combinaciones de alto riesgo.'],
+ ]};
+
+M['security-testing']={title:'Pruebas de seguridad para QA',
+ sum:'Un recorrido de tester por el OWASP Top 10:2025: mantente dentro del alcance, revisa cabeceras y cookies, prueba la autorización con dos usuarios y valora lo que encuentres.',
+ sections:[
+  ['Qué aprenderás',UL(['Mantenerte dentro del alcance: probar solo lo que es tuyo o estás autorizado a probar, y nunca de forma destructiva','Usar el OWASP Top 10:2025 como lista de comprobación del tester','Revisar cabeceras de seguridad y atributos de cookies en una prueba automática','Escribir una prueba de autorización con dos usuarios (BOLA / IDOR)','Revisar dependencias y secretos y valorar un hallazgo como impacto × probabilidad'])],
+  ['Primero alcance y seguridad',`${UL(['Prueba solo sistemas que son tuyos o para los que tienes permiso escrito. Nunca pruebes sistemas de terceros ni producción sin él.','Prefiere un entorno de staging con cuentas y datos de prueba.','Sondea con seguridad: marcadores inofensivos y cargas que no se ejecutan. Sin denegación de servicio, sin extracción de datos, sin pagos reales.','Etiqueta cada resultado con honestidad: <b>Confirmed</b> (reproducido), <b>Suspected</b> (solo indicios) o <b>Not tested</b> (no probado).','Informa de los secretos por ubicación y tipo, nunca por valor.'])}
+${CO('risk','Riesgo','La alerta de un escáner es una pista, no un hallazgo. Reprodúcela con seguridad o infórmala como Suspected.')}`],
+  ['OWASP Top 10:2025 como lista de comprobación del tester',`${T(['ID','Categoría','Qué sondear con seguridad'],[
+   ['A01','Control de acceso roto','Cambia ids en URL y cuerpos; abre rutas de administración como usuario normal; funciones que descargan desde una URL (SSRF ahora está aquí)'],
+   ['A02','Configuración de seguridad incorrecta','Cuentas por defecto, modo depuración, errores detallados, consolas expuestas, cabeceras ausentes'],
+   ['A03','Fallos en la cadena de suministro de software','Dependencias sin fijar o sin mantenimiento, sin lockfile, secretos en CI (novedad de 2025)'],
+   ['A04','Fallos criptográficos','HTTP en lugar de HTTPS, tokens en URL, datos sensibles sin proteger'],
+   ['A05','Inyección','Marcadores inofensivos en las entradas y dónde reaparecen: páginas, consultas, comandos, plantillas'],
+   ['A06','Diseño inseguro','Sin límites de frecuencia, pasos omitidos, cantidades negativas, cupones reutilizables'],
+   ['A07','Fallos de autenticación','Sin bloqueo, sesiones que no terminan al salir, enumeración de usuarios por mensajes de error'],
+   ['A08','Fallos de integridad del software o los datos','Actualizaciones sin firmar, deserialización insegura, scripts de terceros sin comprobación de integridad'],
+   ['A09','Fallos de registro y alertas de seguridad','¿Se registran los inicios de sesión y las denegaciones de acceso? ¿Hay secretos en los registros?'],
+   ['A10','Gestión incorrecta de condiciones excepcionales','Entradas mal formadas, enormes y truncadas: ¿los errores «abren la puerta» o filtran detalles internos? (novedad de 2025)']])}
+${CO('note','Idea clave','La edición de 2025 añadió A03 y A10 e integró la falsificación de peticiones del lado del servidor (SSRF) en A01. Los informes antiguos usan los nombres de 2021; «Vulnerable and Outdated Components» corresponde a A03. Consulta owasp.org para la lista vigente.')}`],
+  ['Cabeceras y cookies en una prueba',`<p>Los navegadores activan protecciones a partir de las cabeceras de respuesta, así que es barato comprobarlas.</p>
+${T(['Cabecera','Qué hace'],[
+   ['Content-Security-Policy','Limita desde dónde pueden cargarse scripts, marcos y otro contenido; una defensa principal contra XSS. Su directiva <code class="i">frame-ancestors</code> indica quién puede incrustar la página y sustituye a X-Frame-Options'],
+   ['Strict-Transport-Security','Indica a los navegadores que usen solo HTTPS (se ignora por HTTP simple)'],
+   ['X-Content-Type-Options: nosniff','Impide que el navegador adivine el tipo de un archivo'],
+   ['Referrer-Policy','Controla cuánto de la URL se envía a otros sitios'],
+   ['Permissions-Policy','Desactiva funciones del navegador que la aplicación no usa']])}
+${P(0)}
+${CO('tip','Consejo','Una cabecera ausente suele ser Low o Informational por sí sola: valórala por lo que expone. Comprueba las cabeceras que decidiste exigir, para que una regresión se detecte.')}`],
+  ['Autorización: dos usuarios, un objeto',`<p>El control de acceso es el fallo grave más común en la web (OWASP A01 y BOLA en la lista de API). Pruébalo con dos cuentas: el usuario A crea un objeto privado y el usuario B intenta leerlo, modificarlo y borrarlo.</p>
+${P(0)}
+<p>Repite para actualizar y borrar, para una ruta solo de administrador usada como usuario normal (escalada vertical) y para un segundo inquilino. El módulo <a href="#api-testing">Pruebas de API</a> trata con más detalle los riesgos OWASP de API.</p>`],
+  ['Dependencias y secretos',UL(['Ejecuta la auditoría del gestor de paquetes (<code class="i">npm audit</code>, <code class="i">pip-audit</code>, <code class="i">dotnet list package --vulnerable</code>) y contrástala con osv.dev. No llames vulnerable a una dependencia sin un aviso (advisory).','Haz commit de los lockfiles, fija versiones e instala en CI con <code class="i">npm ci</code>.','Escanea el repositorio y su historial en busca de secretos (por ejemplo con gitleaks). Mantén los archivos <code class="i">.env</code> fuera de Git.','Fija las acciones de CI de terceros y las imágenes de contenedor a una versión o digest.','Trata un secreto filtrado como comprometido: rótalo. Borrar el commit no basta.'])],
+  ['Valorar un hallazgo',`<p>Este hub usa una convención sencilla: multiplica el <b>impacto</b> (de 1 a 5) por la <b>probabilidad</b> (de 1 a 5) y lee la banda.</p>
+${T(['Puntuación','Gravedad'],[['20–25','Critical'],['12–19','High'],['6–11','Medium'],['2–5','Low'],['0–1','Informational']])}
+<p>El pedido de otro usuario legible cambiando un id: impacto 5 × probabilidad 4 = 20, <b>Critical</b>. Un Referrer-Policy ausente en una herramienta interna: 1 × 2 = 2, <b>Low</b>. Sube la probabilidad si hay exposición a internet, bájala si la exposición es solo localhost o si otro control ya bloquea el ataque, y di qué ajuste aplicaste.</p>
+${CO('note','Idea clave','La confianza (High, Medium, Low) se informa aparte y no cambia la gravedad. Para vulnerabilidades conocidas en software de terceros, usa la puntuación CVSS publicada en el aviso en lugar de calcular la tuya.')}`],
+ ],
+ quiz:[
+  ['Un escáner informa de una posible inyección SQL y no la has reproducido. ¿Cómo la informas?',['Confirmed, Critical','Siempre Informational','Suspected, hasta que la reproduzcas con seguridad','No merece la pena informarla'],'Un indicio sin efecto reproducido es Suspected. Solo un fallo reproducido es Confirmed.'],
+  ['El usuario B pide el pedido del usuario A por id y recibe los datos de A con un 200. ¿Qué categoría del OWASP Top 10:2025 encaja mejor?',['A02 Configuración de seguridad incorrecta','A05 Inyección','A01 Control de acceso roto','A10 Gestión incorrecta de condiciones excepcionales'],'Leer el objeto de otro usuario cambiando un id es un fallo de control de acceso (BOLA / IDOR).'],
+  ['¿Qué dos categorías son nuevas en el OWASP Top 10:2025?',['Inyección y Diseño inseguro','Control de acceso roto y Fallos criptográficos','Registro de seguridad y SSRF','Fallos en la cadena de suministro de software y Gestión incorrecta de condiciones excepcionales'],'A03 y A10 son nuevas en 2025; SSRF se integró en A01.'],
+  ['¿Qué cabecera de respuesta indica a los navegadores que usen solo HTTPS en visitas futuras?',['Strict-Transport-Security','Referrer-Policy','X-Content-Type-Options','Permissions-Policy'],'HSTS hace que el navegador pase a HTTPS. Los navegadores lo ignoran si llega por HTTP simple.'],
+  ['Impacto 4 y probabilidad 4 dan 16. ¿Qué banda de gravedad es (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',['Low','Medium','Critical','High'],'4 × 4 = 16, que cae en la banda 12–19: High.'],
+  ['A una cookie de sesión le falta el atributo HttpOnly. ¿Qué permite?',['Que la cookie no pueda enviarse por HTTPS','Que los scripts de la página lean la cookie, así que un fallo XSS puede robar la sesión','Que otros sitios incrusten la página','Que la cookie caduque de inmediato'],'HttpOnly oculta la cookie a JavaScript. Sin él, un script inyectado puede leer y exfiltrar la sesión.'],
+ ]};
+
+M['defect-reporting']={title:'Informes de defectos e informes de QA',
+ sum:'Escribe un defecto que otra persona pueda reproducir, distingue gravedad de prioridad, etiqueta la evidencia con honestidad y termina con un veredicto elegido por reglas fijas.',
+ sections:[
+  ['Qué aprenderás',UL(['Escribir un informe de defecto que otra persona reproduzca sin hacerte preguntas','Distinguir gravedad (severity) de prioridad','Etiquetar cada afirmación como Confirmed, Suspected o Not tested','Elegir un estado final de QA con reglas de decisión fijas','Maquetar un informe que quien decide pueda leer en dos minutos'])],
+  ['Un defecto que otra persona pueda reproducir',`<p>Un informe es útil cuando un desarrollador que nunca ha visto el problema puede reproducirlo solo con el texto. A la mayoría de los informes que rebotan les faltan las mismas pocas cosas.</p>
+${T(['Campo','Qué escribir'],[
+   ['Título','Qué falla y dónde, en una línea'],
+   ['Entorno','Navegador y SO, versión de la aplicación, cuenta o rol de prueba'],
+   ['Precondiciones','El estado necesario antes del paso 1'],
+   ['Pasos','Numerados y exactos, desde un estado conocido'],
+   ['Esperado / real','Ambos, uno junto al otro'],
+   ['Evidencia','Captura, trace, petición y respuesta, líneas de log: reales y con los secretos enmascarados'],
+   ['Reproducibilidad','Siempre, intermitente (con qué frecuencia) o no reproducido'],
+   ['Gravedad y prioridad','El impacto, con un motivo; con qué urgencia corregirlo']])}
+${T(['Flojo','Mejor'],[
+   ['«El pago está roto»','«Pago: el botón Pay no hace nada con una tarjeta Visa guardada (Chromium, build 2.14.1)»'],
+   ['«A veces falla»','«Falla en 3 de 10 ejecuciones; siempre pasa cuando el carrito tiene un artículo»'],
+   ['«Debería funcionar»','«Esperado: página de confirmación. Real: se queda en el pago; la consola muestra HTTP 500 de /api/pay»']])}
+${CO('tip','Consejo','Un trace de Playwright o una breve grabación de pantalla suele sustituir una página de descripción. Adjúntalo.')}`],
+  ['Gravedad y prioridad',`<p>La <b>gravedad</b> (severity) es el impacto del defecto si llega a producción. La <b>prioridad</b> es con qué urgencia debe corregirse. Están relacionadas pero son distintas, y suelen tener dueños distintos: QA propone la gravedad, el responsable de producto fija la prioridad.</p>
+${T(['Gravedad','Significado','Ejemplo'],[
+   ['Critical','Pérdida o corrupción de datos, una brecha de seguridad o un recorrido central imposible sin alternativa','Cualquier usuario con sesión puede leer los pedidos de otros'],
+   ['High','Falla una función importante o existe una debilidad seria, y la alternativa es difícil o arriesgada','El pago falla con un método de pago'],
+   ['Medium','Pérdida parcial de función, o una debilidad real con alternativa o exposición limitada','Un filtro ignora un criterio'],
+   ['Low','Defecto menor de impacto insignificante','Una etiqueta está desalineada'],
+   ['Informational','Observación o mejora, no un defecto','Falta una cabecera de respuesta opcional']])}
+${T(['Prioridad','Significado'],[['P1','Corregir antes de la versión'],['P2','Corregir en el ciclo actual'],['P3','Planificar'],['P4','Backlog']])}
+${CO('note','Idea clave','Una errata en el nombre de la empresa en la página de inicio es de gravedad Low, pero P1 el día antes de un lanzamiento. Un fallo en una exportación que se usa una vez al año puede ser de gravedad High pero solo P3. Da siempre la gravedad con un motivo de una frase.')}`],
+  ['Confirmed, Suspected, Not tested',`<p>Cada afirmación de un informe lleva una de tres etiquetas, para que los lectores sepan cuánto fiarse.</p>
+${UL(['<b>Confirmed</b>: reproducido, con evidencia que puedes mostrar.','<b>Suspected</b>: hay indicios, pero el efecto no está demostrado. Una alerta de escáner o un «olor» en el código empieza aquí.','<b>Not tested</b>: no lo comprobaste. Dilo y explica por qué.'])}
+<p>Tres reglas mantienen honestos los informes: la ausencia de evidencia no es evidencia de ausencia; nunca inventes logs, versiones ni resultados; separa las observaciones de las suposiciones. Al puntuar un hallazgo, usa impacto × probabilidad como en <a href="#security-testing">Pruebas de seguridad para QA</a> e informa de la confianza aparte.</p>`],
+  ['El estado final',`<p>Termina un informe de QA con un único estado elegido por reglas fijas, para que dos personas que lean los mismos hallazgos lleguen al mismo veredicto. Comprueba las reglas en orden; decide la primera que coincida.</p>
+${T(['Orden','Estado','Úsalo cuando'],[
+   ['1','FAIL','Hay algún hallazgo Confirmed Critical o High, o un recorrido central de usuario está Confirmed roto'],
+   ['2','NOT ENOUGH EVIDENCE','El objetivo era inaccesible, o se pudo verificar tan poco que no sostiene ninguna conclusión'],
+   ['3','PARTIALLY VERIFIED','Parte del alcance está bloqueada o sin probar, o hay un hallazgo Suspected Critical o High sin resolver (y ninguno Confirmed Critical o High)'],
+   ['4','PASS WITH FINDINGS','Se verificó todo el alcance y solo quedan abiertos hallazgos Medium, Low o Informational'],
+   ['5','PASS','Se verificó todo el alcance y no queda abierto nada por encima de Informational']])}
+${CO('risk','Riesgo','Nunca elijas PASS solo porque no se encontraron defectos. PASS exige que se haya verificado todo el alcance solicitado.')}`],
+  ['Estructura del informe',`<p>Pon el veredicto primero. El lector debería poder parar tras la primera sección y aun así actuar.</p>
+${T(['N.º','Sección','Qué contiene'],[
+   ['1','Resumen ejecutivo','El veredicto, los 3 problemas principales y la siguiente acción'],
+   ['2','Alcance y límites','Qué se comprobó, qué no (y por qué), supuestos, herramientas'],
+   ['3','Resumen de hallazgos','ID, gravedad, área, título, confianza'],
+   ['4','Hallazgos detallados','Evidencia, impacto, corrección sugerida, cómo verificarla'],
+   ['5','Qué se vio sano','Áreas comprobadas sin nada que informar'],
+   ['6','Recomendaciones','Ordenadas por gravedad y esfuerzo'],
+   ['7','Pruebas de seguimiento','Negativas, límite y exploratorias'],
+   ['8','¿Qué más revisar?','Huecos que merecen una segunda mirada']])}
+${CO('tip','Consejo','La sección 5 importa. Informar de un área limpia como limpia dice a los lectores dónde pueden dejar de preocuparse. A cada corrección sugerida añade su riesgo, cómo deshacerla y cómo confirmar que funcionó.')}`],
+ ],
+ quiz:[
+  ['¿Qué afirmación sobre gravedad y prioridad es correcta?',['La gravedad es con qué urgencia corregir; la prioridad es el impacto','Significan lo mismo','La gravedad es el impacto si llega a producción; la prioridad es con qué urgencia corregir','La gravedad la fijan solo los desarrolladores'],'La gravedad describe el impacto; la prioridad es una decisión de planificación. Un defecto cosmético puede ser urgente y uno grave puede esperar.'],
+  ['Una errata en el nombre de la empresa en la página de inicio el día antes de un lanzamiento se describe mejor como…',['Gravedad High, P4','Gravedad Critical, P3','Informational, sin prioridad','Gravedad Low, P1'],'El impacto es pequeño (Low) pero el momento la hace urgente (P1).'],
+  ['Un informe dice «El pago a veces está roto». ¿Qué información falta y es más útil?',['Quién lo causó','Pasos exactos, entorno, resultado esperado frente al real y con qué frecuencia ocurre','Un título más largo','Una suposición sobre la causa raíz'],'Pasos reproducibles y contexto permiten al desarrollador ver el problema. Culpar o adivinar, no.'],
+  ['Has reproducido un fallo que permite a un usuario leer los pedidos de otro. ¿Qué etiqueta aplica?',['Suspected','Not tested','Confirmed','Informational'],'Un hallazgo reproducido con evidencia es Confirmed.'],
+  ['Se verificó todo el alcance; quedan abiertos un hallazgo Medium y dos Low; ninguno High ni Critical. ¿Qué estado?',['PASS','PARTIALLY VERIFIED','FAIL','PASS WITH FINDINGS'],'Todo el alcance verificado y solo Medium, Low o Informational abiertos: regla 4, PASS WITH FINDINGS.'],
+  ['Un servicio no estaba disponible y la mitad del alcance no se probó. La otra mitad se verificó sin hallazgos Confirmed Critical ni High. ¿Qué estado?',['PASS WITH FINDINGS','NOT ENOUGH EVIDENCE','PARTIALLY VERIFIED','PASS'],'Parte del alcance está Not tested y no hay Confirmed Critical ni High, así que aplica la regla 3. La regla 2 es para cuando se verificó tan poco que no se puede concluir nada.'],
+ ]};
+
+(TR.es.glossary=TR.es.glossary||[]).push(
+ ['Tabla de decisión','Cuadrícula de combinaciones de condiciones y sus resultados; las filas idénticas se fusionan para probar cada resultado distinto una vez.'],
+ ['Pruebas de transición de estado','Probar los movimientos permitidos y rechazados entre estados, como un pedido de borrador a aprobado.'],
+ ['Pruebas por pares','Cubrir cada par de valores de parámetros al menos una vez en lugar de cada combinación; herramientas como PICT generan los conjuntos.'],
+ ['Adivinación de errores','Elegir casos por la experiencia de dónde suele romperse el software: doble envío, entradas enormes, sesiones caducadas.'],
+ ['Carta de prueba (charter)','Misión de una frase para una sesión exploratoria acotada en el tiempo: explorar un área, con recursos, para descubrir un riesgo.'],
+ ['Content-Security-Policy','Cabecera de respuesta que limita desde dónde una página puede cargar scripts, marcos y otro contenido; una defensa principal contra XSS.'],
+ ['Fallo en la cadena de suministro de software','OWASP Top 10:2025 A03: riesgo por dependencias, canalizaciones de compilación y distribución, como paquetes sin fijar o manipulados.'],
+ ['Confirmed vs suspected','Etiquetas de evidencia en un informe de QA: Confirmed significa reproducido con evidencia; Suspected, solo indicios.'],
+);
+
+TR.es.exam.push(
+ ['Una contraseña debe tener de 8 a 64 caracteres. ¿Qué longitudes forman el conjunto límite de tres valores?',['7, 8, 9 y 63, 64, 65','Solo 8 y 64','1, 32, 100','0, 8, 64'],'El método de tres valores prueba cada límite y sus dos vecinos.'],
+ ['¿Qué garantiza un conjunto de pruebas por pares?',['Se cubre cada combinación de tres valores','Se encuentran todos los defectos','Cada par de valores de parámetros aparece en al menos una prueba','Solo se usan combinaciones válidas'],'Las pruebas por pares cubren todas las interacciones de dos factores con muchas menos pruebas que el producto completo.'],
+ ['Una tabla de decisión tiene tres condiciones sí/no. ¿Cuántas combinaciones hay antes de fusionar resultados idénticos?',['3','8','6','9'],'2 × 2 × 2 = 8.'],
+ ['Un escáner señala un posible XSS y el tester no lo ha reproducido. ¿Qué etiqueta encaja?',['Confirmed','Suspected','Fixed','Solo Informational'],'Los indicios sin efecto reproducido son Suspected.'],
+ ['¿Qué cabecera de respuesta limita desde dónde puede una página cargar scripts?',['Referrer-Policy','Cache-Control','Content-Security-Policy','Accept-Language'],'Content-Security-Policy restringe las fuentes de scripts, marcos y otro contenido.'],
+ ['Impacto 5 y probabilidad 3 dan 15. ¿Qué banda es (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',['Critical','High','Medium','Low'],'5 × 3 = 15, que cae en la banda 12–19: High.'],
+);
+})();
 /* Polski — Podstawy i narzędzia */
 TR.pl=TR.pl||{modules:{}};
 Object.assign(TR.pl.modules,{
@@ -5099,6 +5562,202 @@ ${T(['Zobaczysz…','To oznacza…','Omówione w'],[
 ])}
 ${CO('note','Odpowiedzialne korzystanie','Swobodne posługiwanie się tymi pojęciami i umiejętność dyskutowania kompromisów liczy się bardziej niż wykuwanie definicji na pamięć. Jeśli używasz narzędzi AI w zadaniu rekrutacyjnym do domu, powiedz o tym wprost i bądź gotów wyjaśnić, co sprawdziłeś i zmieniłeś.')}
 </section>`;
+})();
+/* Polski — v6: projektowanie testów, testy bezpieczeństwa dla QA, defekty i raporty QA */
+TR.pl=TR.pl||{modules:{}};
+(()=>{const M=TR.pl.modules;
+
+M['test-design']={title:'Techniki projektowania testów',
+ sum:'Klasy równoważności, wartości brzegowe, tablice decyzyjne, przejścia stanów i kombinacje parami: jak wybrać mały zestaw przypadków, który nadal wykrywa większość defektów.',
+ sections:[
+  ['Czego się nauczysz',UL(['Dzielić dane wejściowe na klasy równoważności i wybierać wartości brzegowe','Redukować tablicę decyzyjną do najmniejszego zestawu reguł','Testować dozwolone i niedozwolone przejścia stanów','Ograniczać eksplozję kombinacji testowaniem parami','Zapisywać wybrane przypadki i zamieniać je na testy sterowane danymi'])],
+  ['Najpierw projekt, potem automatyzacja',`<p>Playwright, Cypress i Selenium wykonują sprawdzenia. Nie decydują, <i>które</i> sprawdzenia warto uruchamiać. Techniki projektowania testów to powtarzalne metody wyboru małego zestawu przypadków, który nadal wykrywa większość defektów. Odpowiadają na pytanie „jakie dane, jakie stany, jakie kombinacje?” zanim powstanie jakikolwiek kod.</p>
+${T(['Technika','Kiedy jej użyć','Przykład'],[
+   ['Podział na klasy równoważności','Dane wejściowe dzielą się na grupy traktowane przez system tak samo','Wiek poniżej, w środku i powyżej dozwolonego zakresu'],
+   ['Analiza wartości brzegowych','Są zakresy i granice; tu żyją błędy o jeden','17, 18, 19 oraz 64, 65, 66'],
+   ['Tablica decyzyjna','Kilka warunków w kombinacji daje różne wyniki','Członek × kupon × kwota zamówienia'],
+   ['Przejścia stanów','Zachowanie zależy od historii lub statusu','Zamówienie: szkic → wysłane → zatwierdzone'],
+   ['Testowanie parami','Wiele parametrów z kilkoma wartościami każdy','Przeglądarka × plan × język'],
+   ['Zgadywanie błędów, eksploracyjne','Doświadczenie podpowiada, gdzie to się psuje','Podwójne kliknięcie „Wyślij”, wklejenie ogromnego tekstu']])}
+${CO('note','Kluczowa myśl','Sylabus ISTQB Foundation (v4.0) wymienia podział na klasy równoważności, analizę wartości brzegowych, tablice decyzyjne i testowanie przejść stanów jako techniki czarnoskrzynkowe, a zgadywanie błędów i testowanie eksploracyjne jako techniki oparte na doświadczeniu. Testowania parami nie ma na tej liście, ale w praktyce jest szeroko stosowane.')}`],
+  ['Klasy równoważności i wartości brzegowe',`<p>Formularz rejestracji przyjmuje wiek od 18 do 65 lat. <b>Podział na klasy równoważności</b> grupuje dane, które system powinien traktować tak samo, i testuje po jednej wartości z każdej grupy. <b>Analiza wartości brzegowych</b> dodaje krańce każdego poprawnego zakresu, bo błędy o jeden (<code class="i">&gt;</code> zamiast <code class="i">&gt;=</code>) skupiają się właśnie tam.</p>
+${T(['Klasa','Przykładowa wartość','Oczekiwany wynik'],[
+   ['Poniżej zakresu (niepoprawne)','10','Odrzucone, komunikat podaje zakres od 18 do 65'],
+   ['W zakresie (poprawne)','40','Przyjęte'],
+   ['Powyżej zakresu (niepoprawne)','80','Odrzucone'],
+   ['Nie liczba','abc','Odrzucone, bez awarii'],
+   ['Puste','(puste pole)','Odrzucone: pole wymagane']])}
+<p>Zestaw wartości brzegowych metodą trzech wartości dla 18–65 to <b>17, 18, 19</b> oraz <b>64, 65, 66</b>. Przekaż przypadki do jednego testu sterowanego danymi:</p>
+${P(0)}
+${CO('tip','Wskazówka','Sprawdzaj regułę walidacji na najniższym poziomie, który ją posiada. Dziewięć uruchomień w przeglądarce dla jednej reguły jest wolne: sprawdź wszystkie dziewięć wartości na poziomie unit lub API, a w UI zostaw po jednym przypadku na klasę, by potwierdzić komunikat i podłączenie.')}`],
+  ['Tablice decyzyjne',`<p>Gdy warunki się łączą, wypisz każdą kombinację i jej wynik. Reguły: dostawa jest darmowa dla członków <i>lub</i> dla zamówień od 100, a kupon daje 10 % zniżki tylko na zamówienia od 100. Trzy warunki tak/nie dają 2 × 2 × 2 = 8 kombinacji, z których wiele ma ten sam wynik, więc łączy się je (kreska oznacza, że warunek nie ma znaczenia).</p>
+${T(['Reguła','Członek','Kupon','Kwota ≥ 100','Dostawa','Zniżka'],[
+   ['R1','–','Tak','Tak','Darmowa','10 %'],
+   ['R2','–','Nie','Tak','Darmowa','Brak'],
+   ['R3','Tak','–','Nie','Darmowa','Brak'],
+   ['R4','Nie','–','Nie','Płatna','Brak']])}
+<p>Osiem kombinacji sprowadza się do czterech reguł, więc cztery testy pokrywają każdy odrębny wynik. Budowa tablicy ujawnia też pytania, na które specyfikacja nie odpowiedziała, na przykład co robi kupon przy zamówieniu 99,99. Dodaj do tych samych testów sprawdzenia brzegowe kwoty (99,99; 100,00).</p>`],
+  ['Testowanie przejść stanów',`<p>Gdy zachowanie zależy od historii, zamodeluj stany i zdarzenia, które między nimi przenoszą. Zamówienie może przejść ścieżkę szkic → wysłane → zatwierdzone → wysłane do klienta i można je anulować przed wysyłką.</p>
+${T(['Ze stanu','Zdarzenie','Do stanu','Oczekiwane'],[
+   ['Szkic','Wyślij','Wysłane','Dozwolone'],
+   ['Wysłane','Zatwierdź','Zatwierdzone','Dozwolone'],
+   ['Zatwierdzone','Wyślij do klienta','Wysłane do klienta','Dozwolone'],
+   ['Wysłane lub zatwierdzone','Anuluj','Anulowane','Dozwolone'],
+   ['Zatwierdzone','Otwórz ponownie','Szkic','Odmowa'],
+   ['Wysłane do klienta','Anuluj','Anulowane','Odmowa'],
+   ['Anulowane','Zatwierdź','Zatwierdzone','Odmowa']])}
+<p>Pokryj każde dozwolone przejście co najmniej raz, a potem spróbuj tych odrzucanych. Każde powinno zostać odrzucone i zostawić stan bez zmian; tu kryje się większość błędów stanów.</p>
+${P(0)}
+${CO('tip','Wskazówka','Sprawdzaj stan po odrzuconej akcji, nie tylko kod błędu. Odpowiedź 409, po której zamówienie jednak się zmieniło, to błąd.')}`],
+  ['Testowanie parami',`<p>Trzy parametry po trzy wartości dają 3 × 3 × 3 = 27 kombinacji; dziesięć parametrów może dać tysiące. Większość defektów wywołuje jedna wartość lub interakcja dwóch, więc zestaw <b>parami</b> pokrywa każdą parę wartości co najmniej raz przy znacznie mniejszej liczbie testów. Dla poniższych parametrów 9 testów pokrywa wszystkie pary.</p>
+${T(['Parametr','Wartości'],[['Przeglądarka','Chromium, Firefox, WebKit'],['Plan','Free, Pro, Team'],['Język','en, uk, pl']])}
+<p>Wygeneruj zestaw narzędziem takim jak <b>PICT</b> lub <b>allpairspy</b> i przekaż wiersze do testu sterowanego danymi, jak w tabeli wieku powyżej. Oba przyjmują <b>ograniczenia</b>, więc niemożliwe kombinacje (język, którego plan Free nie oferuje) nigdy nie są generowane.</p>
+${CO('risk','Ryzyko','Testowanie parami może przeoczyć defekt wymagający trzech lub więcej konkretnych wartości naraz. Dodaj ręcznie najbardziej ryzykowne kombinacje, zwłaszcza dotyczące pieniędzy lub danych osobowych.')}`],
+  ['Zgadywanie błędów i karty eksploracji',`<p>Doświadczenie dodaje przypadki, których nie da żadna technika. Typowe miejsca do sprawdzenia:</p>
+${UL(['Dwukrotnie kliknąć lub dwukrotnie wysłać formularz','Nacisnąć Wstecz lub Odśwież zaraz po wysłaniu','Wkleić bardzo długi tekst, emoji lub tekst od prawej do lewej','Użyć cudzysłowów, nawiasów ostrych i liter z akcentami','Otworzyć ten sam rekord w dwóch kartach lub pozwolić sesji wygasnąć w trakcie zadania','Użyć dat na krańcach: 29 lutego, zmiana czasu, koniec roku'])}
+<p><b>Sesja eksploracyjna</b> jest ograniczona czasowo (30 do 60 minut) i prowadzona przez <b>kartę</b> (charter): <i>zbadaj</i> obszar <i>używając</i> pewnych zasobów, <i>aby odkryć</i> ryzyko. Zapisuj pytania, błędy i nowe ryzyka na bieżąco.</p>
+${CO('note','Przykładowa karta','Zbadaj składanie zamówienia z wygasłymi kartami i dwiema kartami przeglądarki, aby odkryć problemy ze stanem płatności.')}`],
+  ['Zapisywanie przypadków',`<p>Przypadek nadaje się do ponownego użycia tylko wtedy, gdy ktoś inny może go wykonać. Trzymaj krótki, spójny format i oznacz, co automatyzować.</p>
+${T(['ID','Technika','Typ','Kroki','Oczekiwane','Automatyzować'],[
+   ['TC-001','Wartości brzegowe','Brzegowy','Wpisz wiek 17','Odrzucone; komunikat podaje zakres od 18 do 65','Tak'],
+   ['TC-002','Tablica decyzyjna R3','Pozytywny','Członek, kwota 40, bez kuponu','Darmowa dostawa, bez zniżki','Tak'],
+   ['TC-003','Przejścia stanów','Negatywny','Otwórz ponownie zatwierdzone zamówienie','Odmowa; zamówienie pozostaje zatwierdzone','Tak'],
+   ['TC-004','Karta eksploracji','–','Dwie karty, sesja wygasa w trakcie zamówienia','Notatki, pytania, błędy','Nie']])}
+${CO('tip','Wskazówka','Automatyzuj przypadki stabilne, częste i istotne (zob. „Strategia i automatyzacja oparta na ryzyku”). Karta eksploracji z założenia pozostaje ręczna.')}`],
+ ],
+ quiz:[
+  ['Pole ilości przyjmuje od 1 do 10. Który zestaw jest zestawem brzegowym metodą trzech wartości dla górnej granicy?',['9, 10, 11','Tylko 10','5, 10, 20','1, 10'],'Analiza metodą trzech wartości testuje granicę i obu sąsiadów: 9, 10 i 11.'],
+  ['Dlaczego podział na klasy równoważności zmniejsza liczbę testów?',['Usuwa potrzebę oczekiwanych wyników','Jedna wartość reprezentuje całą grupę, którą system traktuje tak samo','Testuje tylko poprawne dane','Testuje każdą możliwą wartość raz'],'Jeśli wszystkie wartości klasy zachowują się tak samo, jeden reprezentant wystarczy, by znaleźć defekt w tej klasie.'],
+  ['Co daje łączenie wierszy o identycznych wynikach w tablicy decyzyjnej?',['Usuwa warunki, które mają znaczenie','Wydłuża tablicę','Mniej reguł do przetestowania, a każdy odrębny wynik nadal jest pokryty','Zastępuje analizę wartości brzegowych'],'Reguły różniące się tylko nieistotnym warunkiem zlewają się w jedną, więc każdy odrębny wynik testujesz raz.'],
+  ['Co powinno się stać przy próbie niedozwolonego przejścia stanu, na przykład ponownego otwarcia wysłanego zamówienia?',['Powinno zostać przyjęte i zapisane w logu','Stan powinien wrócić do początkowego','Powinno zostać odrzucone, a stan pozostać bez zmian','Nic nie trzeba sprawdzać'],'Niedozwolone przejście musi zostać odrzucone bez skutków ubocznych; sprawdzenie, że stan się nie zmienił, wyłapuje częściowo wykonane akcje.'],
+  ['3 przeglądarki × 3 plany × 3 języki dają 27 kombinacji. Co obiecuje zestaw parami?',['Każda kombinacja trzech wartości jest testowana','Każda para wartości występuje w co najmniej jednym teście, zwykle przy znacznie mniejszej liczbie testów','Testowana jest tylko najpopularniejsza przeglądarka','Język nigdy nie ma znaczenia'],'Testowanie parami pokrywa wszystkie interakcje dwuskładnikowe, gdzie pojawia się większość defektów kombinacyjnych, za ułamek pełnego zestawu.'],
+  ['Co jest słabością testowania parami?',['Nie da się go zautomatyzować','Wymaga więcej testów niż wszystkie kombinacje','Działa tylko dla liczb','Może przeoczyć defekt wymagający trzech lub więcej konkretnych wartości naraz'],'Testowanie parami pokrywa pary, nie trójki. Ryzykowne kombinacje dodawaj ręcznie.'],
+ ]};
+
+M['security-testing']={title:'Testowanie bezpieczeństwa dla QA',
+ sum:'Spacer testera po OWASP Top 10:2025: trzymaj się zakresu, sprawdzaj nagłówki i ciasteczka, testuj autoryzację dwoma użytkownikami i oceniaj znaleziska.',
+ sections:[
+  ['Czego się nauczysz',UL(['Trzymać się zakresu: testować tylko to, co jest twoje lub do czego masz uprawnienia, i nigdy destrukcyjnie','Używać OWASP Top 10:2025 jako listy kontrolnej testera','Sprawdzać nagłówki bezpieczeństwa i flagi ciasteczek w teście automatycznym','Pisać test autoryzacji z dwoma użytkownikami (BOLA / IDOR)','Sprawdzać zależności i sekrety oraz oceniać znalezisko jako wpływ × prawdopodobieństwo'])],
+  ['Najpierw zakres i bezpieczeństwo',`${UL(['Testuj tylko systemy, które są twoje lub na których testowanie masz pisemną zgodę. Nigdy nie testuj cudzych systemów ani produkcji bez niej.','Wybieraj środowisko stagingowe z kontami i danymi testowymi.','Sprawdzaj bezpiecznie: nieszkodliwe znaczniki i niewykonywalne ładunki. Bez ataków DoS, wycieku danych i prawdziwych płatności.','Uczciwie oznaczaj każdy wynik: <b>Confirmed</b> (odtworzone), <b>Suspected</b> (tylko przesłanki) lub <b>Not tested</b> (nie testowano).','Zgłaszaj sekrety przez miejsce i typ, nigdy przez wartość.'])}
+${CO('risk','Ryzyko','Alert skanera to trop, nie znalezisko. Odtwórz go bezpiecznie albo zgłoś jako Suspected.')}`],
+  ['OWASP Top 10:2025 jako lista kontrolna testera',`${T(['ID','Kategoria','Co bezpiecznie sprawdzić'],[
+   ['A01','Błędna kontrola dostępu','Zmieniaj identyfikatory w URL-ach i ciałach żądań; otwieraj trasy administracyjne jako zwykły użytkownik; funkcje pobierania z URL (SSRF jest teraz tutaj)'],
+   ['A02','Błędna konfiguracja zabezpieczeń','Domyślne konta, tryb debugowania, szczegółowe błędy, odsłonięte konsole, brakujące nagłówki'],
+   ['A03','Awarie łańcucha dostaw oprogramowania','Niezablokowane lub niewspierane zależności, brak pliku lock, sekrety w CI (nowość w 2025)'],
+   ['A04','Awarie kryptograficzne','HTTP zamiast HTTPS, tokeny w URL-ach, wrażliwe dane bez ochrony'],
+   ['A05','Wstrzykiwanie','Nieszkodliwe znaczniki w danych wejściowych i miejsca, gdzie wracają: strony, zapytania, polecenia, szablony'],
+   ['A06','Niebezpieczny projekt','Brak limitów żądań, pominięte kroki, ujemne ilości, kupony do wielokrotnego użycia'],
+   ['A07','Awarie uwierzytelniania','Brak blokady, sesje niekończone przy wylogowaniu, wyliczanie użytkowników przez komunikaty błędów'],
+   ['A08','Awarie integralności oprogramowania lub danych','Niepodpisane aktualizacje, niebezpieczna deserializacja, skrypty zewnętrzne bez kontroli integralności'],
+   ['A09','Awarie logowania i alertów bezpieczeństwa','Czy logowania i odmowy dostępu są rejestrowane? Czy logi zawierają sekrety?'],
+   ['A10','Niewłaściwa obsługa wyjątkowych sytuacji','Błędne, zbyt duże i ucięte dane: czy błędy „otwierają drzwi” albo ujawniają szczegóły wewnętrzne? (nowość w 2025)']])}
+${CO('note','Kluczowa myśl','Edycja 2025 dodała A03 i A10 oraz włączyła fałszowanie żądań po stronie serwera (SSRF) do A01. Starsze raporty używają nazw z 2021 roku; „Vulnerable and Outdated Components” odpowiada A03. Aktualną listę sprawdź na owasp.org.')}`],
+  ['Nagłówki i ciasteczka w teście',`<p>Przeglądarki włączają zabezpieczenia na podstawie nagłówków odpowiedzi, więc łatwo je zweryfikować.</p>
+${T(['Nagłówek','Co robi'],[
+   ['Content-Security-Policy','Ogranicza, skąd można ładować skrypty, ramki i inną zawartość; główna obrona przed XSS. Jego dyrektywa <code class="i">frame-ancestors</code> określa, kto może osadzać stronę, i zastępuje X-Frame-Options'],
+   ['Strict-Transport-Security','Każe przeglądarkom używać wyłącznie HTTPS (ignorowany przez zwykły HTTP)'],
+   ['X-Content-Type-Options: nosniff','Powstrzymuje przeglądarkę przed zgadywaniem typu pliku'],
+   ['Referrer-Policy','Kontroluje, jaka część URL jest wysyłana do innych witryn'],
+   ['Permissions-Policy','Wyłącza funkcje przeglądarki, których aplikacja nie używa']])}
+${P(0)}
+${CO('tip','Wskazówka','Brakujący nagłówek sam w sobie to zwykle Low lub Informational: oceniaj go przez to, co ujawnia. Sprawdzaj nagłówki, które uznałeś za wymagane, aby regresja była widoczna.')}`],
+  ['Autoryzacja: dwóch użytkowników, jeden obiekt',`<p>Kontrola dostępu to najczęstsza poważna wada aplikacji webowych (OWASP A01 i BOLA na liście API). Testuj ją dwoma kontami: użytkownik A tworzy prywatny obiekt, a użytkownik B próbuje go odczytać, zmienić i usunąć.</p>
+${P(0)}
+<p>Powtórz dla aktualizacji i usunięcia, dla trasy tylko dla administratora używanej jako zwykły użytkownik (eskalacja pionowa) oraz dla drugiego najemcy. Moduł <a href="#api-testing">Testowanie API</a> opisuje ryzyka OWASP dla API dokładniej.</p>`],
+  ['Zależności i sekrety',UL(['Uruchom audyt menedżera pakietów (<code class="i">npm audit</code>, <code class="i">pip-audit</code>, <code class="i">dotnet list package --vulnerable</code>) i porównaj z osv.dev. Nie nazywaj zależności podatną bez advisory.','Commituj pliki lock, przypinaj wersje i instaluj w CI przez <code class="i">npm ci</code>.','Skanuj repozytorium i jego historię pod kątem sekretów (na przykład gitleaks). Trzymaj pliki <code class="i">.env</code> poza Git.','Przypinaj zewnętrzne akcje CI i obrazy kontenerów do wersji lub digestu.','Traktuj wyciekły sekret jako skompromitowany: zrotuj go. Usunięcie commitu nie wystarczy.'])],
+  ['Ocena znaleziska',`<p>Ten hub stosuje prostą konwencję: pomnóż <b>wpływ</b> (od 1 do 5) przez <b>prawdopodobieństwo</b> (od 1 do 5) i odczytaj przedział.</p>
+${T(['Wynik','Waga'],[['20–25','Critical'],['12–19','High'],['6–11','Medium'],['2–5','Low'],['0–1','Informational']])}
+<p>Cudze zamówienie do odczytania przez zmianę identyfikatora: wpływ 5 × prawdopodobieństwo 4 = 20, <b>Critical</b>. Brak Referrer-Policy w narzędziu wewnętrznym: 1 × 2 = 2, <b>Low</b>. Podnieś prawdopodobieństwo przy dostępności z internetu, obniż, gdy dostęp jest tylko z localhost lub inna kontrola już blokuje atak, i powiedz, jaką korektę zastosowano.</p>
+${CO('note','Kluczowa myśl','Pewność (High, Medium, Low) podaje się osobno i nie zmienia wagi. Dla znanych podatności w cudzym oprogramowaniu użyj oceny CVSS z advisory zamiast własnej.')}`],
+ ],
+ quiz:[
+  ['Skaner zgłasza możliwy SQL injection, a ty go nie odtworzyłeś. Jak to zgłosić?',['Confirmed, Critical','Zawsze Informational','Suspected, dopóki nie odtworzysz bezpiecznie','Nie warto zgłaszać'],'Przesłanka bez odtworzonego skutku to Suspected. Tylko odtworzona wada jest Confirmed.'],
+  ['Użytkownik B żąda zamówienia użytkownika A po identyfikatorze i dostaje dane A z kodem 200. Która kategoria OWASP Top 10:2025 pasuje najlepiej?',['A02 Błędna konfiguracja zabezpieczeń','A05 Wstrzykiwanie','A01 Błędna kontrola dostępu','A10 Niewłaściwa obsługa wyjątkowych sytuacji'],'Odczyt cudzego obiektu przez zmianę identyfikatora to wada kontroli dostępu (BOLA / IDOR).'],
+  ['Które dwie kategorie są nowe w OWASP Top 10:2025?',['Wstrzykiwanie i Niebezpieczny projekt','Błędna kontrola dostępu i Awarie kryptograficzne','Logowanie zabezpieczeń i SSRF','Awarie łańcucha dostaw oprogramowania i Niewłaściwa obsługa wyjątkowych sytuacji'],'A03 i A10 są nowe w 2025; SSRF włączono do A01.'],
+  ['Który nagłówek odpowiedzi każe przeglądarkom używać wyłącznie HTTPS przy kolejnych wizytach?',['Strict-Transport-Security','Referrer-Policy','X-Content-Type-Options','Permissions-Policy'],'HSTS sprawia, że przeglądarka przechodzi na HTTPS. Przeglądarki ignorują go, gdy przyjdzie zwykłym HTTP.'],
+  ['Wpływ 4 i prawdopodobieństwo 4 dają 16. Który to przedział wagi (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',['Low','Medium','Critical','High'],'4 × 4 = 16, to przedział 12–19: High.'],
+  ['Ciasteczko sesji nie ma flagi HttpOnly. Na co to pozwala?',['Ciasteczko nie może być wysyłane przez HTTPS','Skryptom strony czytać ciasteczko, więc luka XSS może wykraść sesję','Innym witrynom osadzać stronę','Ciasteczko natychmiast wygasa'],'HttpOnly ukrywa ciasteczko przed JavaScriptem. Bez niego wstrzyknięty skrypt może odczytać i wykraść sesję.'],
+ ]};
+
+M['defect-reporting']={title:'Zgłoszenia defektów i raporty QA',
+ sum:'Napisz defekt, który ktoś inny odtworzy, odróżniaj wagę od priorytetu, uczciwie oznaczaj dowody i kończ werdyktem wybranym według stałych reguł.',
+ sections:[
+  ['Czego się nauczysz',UL(['Pisać zgłoszenie defektu, które ktoś inny odtworzy bez dodatkowych pytań','Odróżniać wagę (severity) od priorytetu','Oznaczać każde twierdzenie jako Confirmed, Suspected lub Not tested','Wybierać końcowy status QA według stałych reguł','Układać raport tak, by decydent przeczytał go w dwie minuty'])],
+  ['Defekt, który ktoś inny odtworzy',`<p>Zgłoszenie jest użyteczne, gdy programista, który nigdy nie widział problemu, może go odtworzyć wyłącznie z tekstu. Większości zgłoszeń, które wracają, brakuje tych samych kilku rzeczy.</p>
+${T(['Pole','Co napisać'],[
+   ['Tytuł','Co jest nie tak i gdzie, w jednej linii'],
+   ['Środowisko','Przeglądarka i system, wersja aplikacji, konto testowe lub rola'],
+   ['Warunki wstępne','Stan potrzebny przed krokiem 1'],
+   ['Kroki','Ponumerowane i dokładne, od znanego stanu'],
+   ['Oczekiwane / rzeczywiste','Oba, obok siebie'],
+   ['Dowody','Zrzut ekranu, trace, żądanie i odpowiedź, linie logu: prawdziwe, z zamaskowanymi sekretami'],
+   ['Powtarzalność','Zawsze, sporadycznie (jak często) lub nieodtworzone'],
+   ['Waga i priorytet','Wpływ z uzasadnieniem; jak szybko naprawić']])}
+${T(['Słabe','Lepsze'],[
+   ['„Zamówienie nie działa”','„Zamówienie: przycisk Pay nic nie robi dla zapisanej karty Visa (Chromium, build 2.14.1)”'],
+   ['„Czasem się wywala”','„Pada w 3 z 10 uruchomień; zawsze przechodzi, gdy koszyk ma jedną pozycję”'],
+   ['„Powinno działać”','„Oczekiwane: strona potwierdzenia. Rzeczywiste: zostaje na płatności; konsola pokazuje HTTP 500 z /api/pay”']])}
+${CO('tip','Wskazówka','Trace Playwrighta lub krótkie nagranie ekranu często zastępuje stronę opisu. Dołącz je.')}`],
+  ['Waga i priorytet',`<p><b>Waga</b> (severity) to wpływ defektu, jeśli trafi do wydania. <b>Priorytet</b> to jak szybko należy go naprawić. Są powiązane, ale różne, i zwykle mają różnych właścicieli: QA proponuje wagę, właściciel produktu ustala priorytet.</p>
+${T(['Waga','Znaczenie','Przykład'],[
+   ['Critical','Utrata lub uszkodzenie danych, naruszenie bezpieczeństwa albo kluczowa ścieżka niemożliwa bez obejścia','Każdy zalogowany użytkownik może czytać zamówienia innych'],
+   ['High','Główna funkcja zawodzi lub istnieje poważna słabość, a obejście jest trudne lub ryzykowne','Zamówienie nie działa dla jednej metody płatności'],
+   ['Medium','Częściowa utrata funkcji albo realna słabość z obejściem lub ograniczoną ekspozycją','Filtr ignoruje jedno kryterium'],
+   ['Low','Drobny defekt o znikomym wpływie','Etykieta jest przesunięta'],
+   ['Informational','Obserwacja lub usprawnienie, nie defekt','Brakuje opcjonalnego nagłówka odpowiedzi']])}
+${T(['Priorytet','Znaczenie'],[['P1','Naprawić przed wydaniem'],['P2','Naprawić w bieżącym cyklu'],['P3','Zaplanować'],['P4','Backlog']])}
+${CO('note','Kluczowa myśl','Literówka w nazwie firmy na stronie głównej to Low pod względem wagi, ale P1 w przeddzień premiery. Awaria eksportu używanego raz w roku może mieć wagę High, ale tylko P3. Zawsze podawaj wagę z jednozdaniowym uzasadnieniem.')}`],
+  ['Confirmed, Suspected, Not tested',`<p>Każde twierdzenie w raporcie nosi jedną z trzech etykiet, by czytelnicy wiedzieli, na ile mu ufać.</p>
+${UL(['<b>Confirmed</b>: odtworzone, z dowodami, które można pokazać.','<b>Suspected</b>: są przesłanki, ale skutek nie jest dowiedziony. Alert skanera lub „zapach kodu” zaczyna się tutaj.','<b>Not tested</b>: nie sprawdzałeś tego. Powiedz o tym i dlaczego.'])}
+<p>Trzy zasady utrzymują uczciwość raportów: brak dowodów nie jest dowodem braku; nigdy nie wymyślaj logów, wersji ani wyników; oddzielaj obserwacje od założeń. Oceniając znalezisko, użyj wpływu × prawdopodobieństwa jak w module <a href="#security-testing">Testowanie bezpieczeństwa dla QA</a>, a pewność podaj osobno.</p>`],
+  ['Status końcowy',`<p>Zakończ raport QA jednym statusem wybranym według stałych reguł, aby dwie osoby czytające te same znaleziska doszły do tego samego werdyktu. Sprawdzaj reguły po kolei; pierwsza pasująca decyduje.</p>
+${T(['Kolejność','Status','Kiedy stosować'],[
+   ['1','FAIL','Jakiekolwiek Confirmed Critical lub High, albo kluczowa ścieżka użytkownika Confirmed zepsuta'],
+   ['2','NOT ENOUGH EVIDENCE','Cel był niedostępny albo zweryfikowano zbyt mało, by wyciągnąć jakikolwiek wniosek'],
+   ['3','PARTIALLY VERIFIED','Część zakresu jest zablokowana lub nietestowana, albo nierozstrzygnięte Suspected Critical lub High (i nic Confirmed Critical ani High)'],
+   ['4','PASS WITH FINDINGS','Cały zakres zweryfikowano, otwarte zostały tylko znaleziska Medium, Low lub Informational'],
+   ['5','PASS','Cały zakres zweryfikowano i nic powyżej Informational nie pozostaje otwarte']])}
+${CO('risk','Ryzyko','Nigdy nie wybieraj PASS tylko dlatego, że nie znaleziono defektów. PASS wymaga zweryfikowania całego żądanego zakresu.')}`],
+  ['Układ raportu',`<p>Werdykt stawiaj na początku. Czytelnik powinien móc zatrzymać się po pierwszej sekcji i nadal podjąć działanie.</p>
+${T(['#','Sekcja','Co zawiera'],[
+   ['1','Podsumowanie dla zarządu','Werdykt, trzy główne problemy i jeden następny krok'],
+   ['2','Zakres i ograniczenia','Co sprawdzono, czego nie (i dlaczego), założenia, narzędzia'],
+   ['3','Przegląd znalezisk','ID, waga, obszar, tytuł, pewność'],
+   ['4','Szczegółowe znaleziska','Dowody, wpływ, proponowana poprawka, jak ją zweryfikować'],
+   ['5','Co wyglądało zdrowo','Obszary sprawdzone bez uwag'],
+   ['6','Rekomendacje','Uporządkowane według wagi i nakładu'],
+   ['7','Testy uzupełniające','Negatywne, brzegowe i eksploracyjne'],
+   ['8','Co jeszcze sprawdzić?','Luki warte drugiego spojrzenia']])}
+${CO('tip','Wskazówka','Sekcja 5 ma znaczenie. Czysty obszar zgłoszony jako czysty mówi czytelnikom, gdzie mogą przestać się martwić. Do każdej proponowanej poprawki dodaj jej ryzyko, jak ją cofnąć i jak potwierdzić, że zadziałała.')}`],
+ ],
+ quiz:[
+  ['Które stwierdzenie o wadze i priorytecie jest poprawne?',['Waga to jak szybko naprawić; priorytet to wpływ','Znaczą to samo','Waga to wpływ, jeśli defekt trafi do wydania; priorytet to jak szybko naprawić','Wagę ustalają wyłącznie programiści'],'Waga opisuje wpływ; priorytet to decyzja planistyczna. Defekt kosmetyczny może być pilny, a poważny może poczekać.'],
+  ['Literówka w nazwie firmy na stronie głównej w przeddzień premiery to najlepiej…',['High waga, P4','Critical waga, P3','Informational, bez priorytetu','Low waga, P1'],'Wpływ jest mały (Low), ale czas czyni ją pilną (P1).'],
+  ['Zgłoszenie mówi „Zamówienie czasem nie działa”. Jakiej informacji brakuje najbardziej?',['Kto to spowodował','Dokładnych kroków, środowiska, wyniku oczekiwanego i rzeczywistego oraz tego, jak często się zdarza','Dłuższego tytułu','Domysłu o przyczynie źródłowej'],'Powtarzalne kroki i kontekst pozwalają programiście zobaczyć problem. Obwinianie i zgadywanie nie.'],
+  ['Odtworzyłeś lukę pozwalającą jednemu użytkownikowi czytać zamówienia drugiego. Jaka etykieta?',['Suspected','Not tested','Confirmed','Informational'],'Odtworzone znalezisko z dowodami to Confirmed.'],
+  ['Cały zakres zweryfikowano; otwarte pozostały jedno Medium i dwa Low; nic High ani Critical. Jaki status?',['PASS','PARTIALLY VERIFIED','FAIL','PASS WITH FINDINGS'],'Cały zakres zweryfikowany i otwarte tylko Medium, Low lub Informational: reguła 4, PASS WITH FINDINGS.'],
+  ['Jedna usługa była niedostępna, więc połowy zakresu nie przetestowano. Drugą połowę zweryfikowano bez Confirmed Critical ani High. Jaki status?',['PASS WITH FINDINGS','NOT ENOUGH EVIDENCE','PARTIALLY VERIFIED','PASS'],'Część zakresu to Not tested i nie ma Confirmed Critical ani High, więc działa reguła 3. Reguła 2 jest na sytuację, gdy zweryfikowano zbyt mało, by wnioskować.'],
+ ]};
+
+(TR.pl.glossary=TR.pl.glossary||[]).push(
+ ['Tablica decyzyjna','Siatka kombinacji warunków i ich wyników; identyczne wiersze łączy się, by każdy odrębny wynik testować raz.'],
+ ['Testowanie przejść stanów','Sprawdzanie dozwolonych i odrzucanych przejść między stanami, na przykład zamówienia od szkicu do zatwierdzonego.'],
+ ['Testowanie parami','Pokrycie każdej pary wartości parametrów co najmniej raz zamiast każdej kombinacji; zestawy generują narzędzia takie jak PICT.'],
+ ['Zgadywanie błędów','Dobór przypadków z doświadczenia, gdzie oprogramowanie zwykle się psuje: podwójne wysłanie, ogromne dane, wygasłe sesje.'],
+ ['Karta testu (charter)','Jednozdaniowa misja ograniczonej czasowo sesji eksploracyjnej: zbadaj obszar, z użyciem zasobów, aby odkryć ryzyko.'],
+ ['Content-Security-Policy','Nagłówek odpowiedzi ograniczający, skąd strona może ładować skrypty, ramki i inną zawartość; główna obrona przed XSS.'],
+ ['Awaria łańcucha dostaw oprogramowania','OWASP Top 10:2025 A03: ryzyko od zależności, potoków budowania i dystrybucji, np. niezablokowane lub podmienione pakiety.'],
+ ['Confirmed vs suspected','Etykiety dowodów w raporcie QA: Confirmed oznacza odtworzone z dowodami; Suspected tylko przesłanki.'],
+);
+
+TR.pl.exam.push(
+ ['Hasło musi mieć od 8 do 64 znaków. Jakie długości tworzą zestaw brzegowy metodą trzech wartości?',['7, 8, 9 oraz 63, 64, 65','Tylko 8 i 64','1, 32, 100','0, 8, 64'],'Metoda trzech wartości testuje każdą granicę i obu jej sąsiadów.'],
+ ['Co gwarantuje zestaw testów parami?',['Pokryta jest każda kombinacja trzech wartości','Znalezione są wszystkie defekty','Każda para wartości parametrów występuje w co najmniej jednym teście','Używane są tylko poprawne kombinacje'],'Testowanie parami pokrywa wszystkie interakcje dwuskładnikowe przy znacznie mniejszej liczbie testów niż pełny iloczyn.'],
+ ['Tablica decyzyjna ma trzy warunki tak/nie. Ile jest kombinacji przed połączeniem identycznych wyników?',['3','8','6','9'],'2 × 2 × 2 = 8.'],
+ ['Skaner oznaczył możliwy XSS, a tester go nie odtworzył. Jaka etykieta pasuje?',['Confirmed','Suspected','Fixed','Tylko Informational'],'Przesłanki bez odtworzonego skutku to Suspected.'],
+ ['Który nagłówek odpowiedzi ogranicza, skąd strona może ładować skrypty?',['Referrer-Policy','Cache-Control','Content-Security-Policy','Accept-Language'],'Content-Security-Policy ogranicza źródła skryptów, ramek i innej zawartości.'],
+ ['Wpływ 5 i prawdopodobieństwo 3 dają 15. Który to przedział (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',['Critical','High','Medium','Low'],'5 × 3 = 15, to przedział 12–19: High.'],
+);
 })();
 /* Українська — Основи та інструменти */
 TR.uk=TR.uk||{modules:{}};
@@ -6331,6 +6990,202 @@ ${T(['Побачите…','Це означає…','Розкрито в'],[
 ${CO('note','Відповідальне використання','Вільне володіння цими термінами й уміння обговорювати компроміси важливіші за заучування визначень. Якщо ви використовуєте ШІ-інструменти в тестовому завданні на співбесіді — скажіть про це прямо і будьте готові пояснити, що ви перевірили й змінили.')}
 </section>`;
 })();
+/* Українська — v6: тест-дизайн, тестування безпеки для QA, дефекти й QA-звіти */
+TR.uk=TR.uk||{modules:{}};
+(()=>{const M=TR.uk.modules;
+
+M['test-design']={title:'Техніки тест-дизайну',
+ sum:'Класи еквівалентності, граничні значення, таблиці рішень, переходи станів і попарні комбінації: як обрати невеликий набір кейсів, що все ж знаходить більшість дефектів.',
+ sections:[
+  ['Що ви дізнаєтеся',UL(['Ділити вхідні дані на класи еквівалентності й обирати граничні значення','Скорочувати таблицю рішень до найменшого набору правил','Тестувати допустимі й недопустимі переходи станів','Долати комбінаторний вибух за допомогою попарного тестування','Записувати обрані кейси й перетворювати їх на data-driven тести'])],
+  ['Спершу дизайн, потім автоматизація',`<p>Playwright, Cypress і Selenium виконують перевірки. Вони не вирішують, <i>які</i> перевірки варті запуску. Техніки тест-дизайну — це повторювані методи вибору невеликого набору кейсів, що все ж знаходить більшість дефектів. Вони відповідають на питання «які вхідні дані, які стани, які комбінації?» ще до того, як написано код.</p>
+${T(['Техніка','Коли застосовувати','Приклад'],[
+   ['Розбиття на класи еквівалентності','Вхідні дані діляться на групи, які система обробляє однаково','Вік нижче, всередині та вище допустимого діапазону'],
+   ['Аналіз граничних значень','Є діапазони й межі; саме тут живуть помилки «на одиницю»','17, 18, 19 та 64, 65, 66'],
+   ['Таблиця рішень','Кілька умов у комбінації дають різні результати','Учасник × купон × сума замовлення'],
+   ['Перехід станів','Поведінка залежить від історії чи статусу','Замовлення: чернетка → надіслано → схвалено'],
+   ['Попарне тестування','Багато параметрів із кількома значеннями кожен','Браузер × тариф × мова'],
+   ['Припущення про помилки, дослідницьке','Досвід підказує, де воно ламається','Подвійний клік на «Надіслати», вставлення величезного тексту']])}
+${CO('note','Ключова ідея','Програма ISTQB Foundation (v4.0) називає розбиття на класи еквівалентності, аналіз граничних значень, таблиці рішень і тестування переходів станів техніками «чорної скриньки», а припущення про помилки та дослідницьке тестування — техніками на основі досвіду. Попарного тестування в цьому переліку немає, але на практиці його широко застосовують.')}`],
+  ['Класи еквівалентності та граничні значення',`<p>Форма реєстрації приймає вік від 18 до 65. <b>Розбиття на класи еквівалентності</b> групує вхідні дані, які система має обробляти однаково, і перевіряє по одному значенню з кожної групи. <b>Аналіз граничних значень</b> додає межі кожного допустимого діапазону, бо помилки «на одиницю» (<code class="i">&gt;</code> замість <code class="i">&gt;=</code>) скупчуються саме там.</p>
+${T(['Клас','Приклад значення','Очікуваний результат'],[
+   ['Нижче діапазону (недопустимо)','10','Відхилено, повідомлення називає діапазон від 18 до 65'],
+   ['Всередині діапазону (допустимо)','40','Прийнято'],
+   ['Вище діапазону (недопустимо)','80','Відхилено'],
+   ['Не число','abc','Відхилено, без збою'],
+   ['Порожньо','(порожнє поле)','Відхилено: поле обов’язкове']])}
+<p>Набір граничних значень за методом трьох значень для 18–65: <b>17, 18, 19</b> та <b>64, 65, 66</b>. Передайте кейси в один data-driven тест:</p>
+${P(0)}
+${CO('tip','Порада','Перевіряйте правило валідації на найнижчому рівні, який ним володіє. Дев’ять запусків у браузері заради одного правила — повільно: перевірте всі дев’ять значень на рівні unit чи API, а в UI залиште по одному кейсу на клас, щоб підтвердити повідомлення й під’єднання.')}`],
+  ['Таблиці рішень',`<p>Коли умови поєднуються, випишіть кожну комбінацію та її результат. Правила: доставка безкоштовна для учасників <i>або</i> для замовлень від 100, а купон дає знижку 10 % лише на замовлення від 100. Три умови «так/ні» дають 2 × 2 × 2 = 8 комбінацій, і багато з них мають однаковий результат, тож їх об’єднують (риска означає, що умова не має значення).</p>
+${T(['Правило','Учасник','Купон','Сума ≥ 100','Доставка','Знижка'],[
+   ['R1','–','Так','Так','Безкоштовно','10 %'],
+   ['R2','–','Ні','Так','Безкоштовно','Немає'],
+   ['R3','Так','–','Ні','Безкоштовно','Немає'],
+   ['R4','Ні','–','Ні','Платно','Немає']])}
+<p>Вісім комбінацій зводяться до чотирьох правил, тож чотири тести покривають кожен окремий результат. Складання таблиці також виявляє питання, на які специфікація не відповіла, наприклад що робить купон на замовлення 99,99. Додайте до тих самих тестів граничні перевірки суми (99,99; 100,00).</p>`],
+  ['Тестування переходів станів',`<p>Коли поведінка залежить від історії, змоделюйте стани та події, що переводять між ними. Замовлення може пройти шлях чернетка → надіслано → схвалено → відправлено, і його можна скасувати до відправлення.</p>
+${T(['Зі стану','Подія','У стан','Очікується'],[
+   ['Чернетка','Надіслати','Надіслано','Дозволено'],
+   ['Надіслано','Схвалити','Схвалено','Дозволено'],
+   ['Схвалено','Відправити','Відправлено','Дозволено'],
+   ['Надіслано або схвалено','Скасувати','Скасовано','Дозволено'],
+   ['Схвалено','Відкрити знову','Чернетка','Відмовлено'],
+   ['Відправлено','Скасувати','Скасовано','Відмовлено'],
+   ['Скасовано','Схвалити','Схвалено','Відмовлено']])}
+<p>Покрийте кожен дозволений перехід принаймні раз, а тоді спробуйте відхилені. Кожен має бути відхилений і лишити стан незмінним; саме тут ховається більшість помилок станів.</p>
+${P(0)}
+${CO('tip','Порада','Перевіряйте стан після відхиленої дії, а не лише код помилки. Відповідь 409, після якої замовлення все ж змінилося, — це баг.')}`],
+  ['Попарне тестування',`<p>Три параметри по три значення дають 3 × 3 × 3 = 27 комбінацій; десять параметрів можуть дати тисячі. Більшість дефектів викликає одне значення або взаємодія двох, тож <b>попарний</b> набір покриває кожну пару значень принаймні раз за значно меншу кількість тестів. Для наведених нижче параметрів 9 тестів покривають усі пари.</p>
+${T(['Параметр','Значення'],[['Браузер','Chromium, Firefox, WebKit'],['Тариф','Free, Pro, Team'],['Мова','en, uk, pl']])}
+<p>Згенеруйте набір інструментом на кшталт <b>PICT</b> чи <b>allpairspy</b> і передайте рядки в data-driven тест, як у таблиці віку вище. Обидва приймають <b>обмеження</b>, тож неможливі комбінації (мова, якої немає в тарифі Free) ніколи не генеруються.</p>
+${CO('risk','Ризик','Попарне тестування може пропустити дефект, якому потрібні три чи більше конкретних значень разом. Додайте найризикованіші комбінації вручну, особливо ті, що стосуються грошей чи персональних даних.')}`],
+  ['Припущення про помилки та дослідницькі хартії',`<p>Досвід додає кейси, яких не дає жодна техніка. Типові місця, де варто пошукати:</p>
+${UL(['Двічі клікнути чи двічі надіслати форму','Натиснути «Назад» або оновити сторінку одразу після надсилання','Вставити дуже довгий текст, емодзі чи текст справа наліво','Використати лапки, кутові дужки й літери з діакритиками','Відкрити той самий запис у двох вкладках або дати сесії спливти посеред завдання','Взяти дати на межах: 29 лютого, перехід на літній чи зимовий час, кінець року'])}
+<p><b>Дослідницька сесія</b> обмежена в часі (30–60 хвилин) і спрямована <b>хартією</b>: <i>дослідіть</i> ділянку <i>з</i> певними ресурсами, <i>щоб виявити</i> ризик. Записуйте запитання, баги й нові ризики по ходу.</p>
+${CO('note','Приклад хартії','Дослідіть оформлення замовлення з простроченими картками й двома вкладками браузера, щоб виявити проблеми зі станами платежу.')}`],
+  ['Запис кейсів',`<p>Кейс придатний до повторного використання, лише якщо його може виконати хтось інший. Тримайте короткий послідовний формат і позначайте, що автоматизувати.</p>
+${T(['ID','Техніка','Тип','Кроки','Очікується','Автоматизувати'],[
+   ['TC-001','Граничні значення','Граничний','Ввести вік 17','Відхилено; повідомлення називає діапазон від 18 до 65','Так'],
+   ['TC-002','Таблиця рішень R3','Позитивний','Учасник, сума 40, без купона','Безкоштовна доставка, без знижки','Так'],
+   ['TC-003','Перехід станів','Негативний','Відкрити знову схвалене замовлення','Відмовлено; замовлення лишається схваленим','Так'],
+   ['TC-004','Дослідницька хартія','–','Дві вкладки, сесія спливає посеред оформлення','Нотатки, запитання, баги','Ні']])}
+${CO('tip','Порада','Автоматизуйте кейси, які стабільні, часті та вагомі (див. «Стратегія й автоматизація на основі ризиків»). Хартія за задумом лишається ручною.')}`],
+ ],
+ quiz:[
+  ['Поле кількості приймає від 1 до 10. Який набір є граничним за методом трьох значень для верхньої межі?',['9, 10, 11','Лише 10','5, 10, 20','1, 10'],'Аналіз граничних значень за методом трьох значень перевіряє межу та обох сусідів: 9, 10 і 11.'],
+  ['Чому розбиття на класи еквівалентності зменшує кількість тестів?',['Воно усуває потребу в очікуваних результатах','Одне значення представляє цілу групу, яку система обробляє однаково','Воно перевіряє лише коректні дані','Воно перевіряє кожне можливе значення один раз'],'Якщо всі значення класу поводяться однаково, одного представника досить, щоб знайти дефект у цьому класі.'],
+  ['Чого досягає об’єднання рядків з однаковим результатом у таблиці рішень?',['Усуває умови, які мають значення','Робить таблицю довшою','Менше правил для тестування, а кожен окремий результат усе одно покрито','Замінює аналіз граничних значень'],'Правила, що відрізняються лише неістотною умовою, зливаються в одне, тож кожен окремий результат перевіряється один раз.'],
+  ['Що має статися, коли спробувати недопустимий перехід стану, наприклад знову відкрити відправлене замовлення?',['Його приймуть і запишуть у журнал','Стан скинеться до початкового','Його відхилять, а стан лишиться незмінним','Нічого перевіряти не потрібно'],'Недопустимий перехід має бути відхилений без побічних ефектів; перевірка, що стан не змінився, ловить частково застосовані дії.'],
+  ['3 браузери × 3 тарифи × 3 мови дають 27 комбінацій. Що обіцяє попарний набір?',['Перевірено кожну комбінацію трьох значень','Кожна пара значень з’являється принаймні в одному тесті, зазвичай за значно меншу кількість тестів','Перевіряється лише найпоширеніший браузер','Мова ніколи не має значення'],'Попарне тестування покриває всі двосторонні взаємодії, де з’являється більшість комбінаційних дефектів, за малу частку повного набору.'],
+  ['Що є слабкістю попарного тестування?',['Його не можна автоматизувати','Воно потребує більше тестів, ніж усі комбінації','Воно працює лише з числами','Воно може пропустити дефект, якому потрібні три чи більше конкретних значень разом'],'Попарне тестування покриває пари, а не трійки. Додавайте комбінації з високим ризиком вручну.'],
+ ]};
+
+M['security-testing']={title:'Тестування безпеки для QA',
+ sum:'Прогулянка тестувальника по OWASP Top 10:2025: тримайтеся в межах дозволеного, перевіряйте заголовки й cookie, тестуйте авторизацію двома користувачами та оцінюйте знахідки.',
+ sections:[
+  ['Що ви дізнаєтеся',UL(['Триматися в межах дозволеного: тестувати лише те, що вам належить або що ви маєте право тестувати, і ніколи не руйнівно','Користуватися OWASP Top 10:2025 як чеклістом тестувальника','Перевіряти заголовки безпеки та прапорці cookie в автоматизованому тесті','Писати тест авторизації з двома користувачами (BOLA / IDOR)','Перевіряти залежності й секрети та оцінювати знахідку як вплив × ймовірність'])],
+  ['Спершу межі й безпека',`${UL(['Тестуйте лише системи, які вам належать або на тестування яких є письмовий дозвіл. Ніколи не тестуйте сторонні системи чи продакшн без нього.','Віддавайте перевагу стейджингу з тестовими обліковими записами й тестовими даними.','Перевіряйте безпечно: нешкідливі маркери та неспрацьовувані навантаження. Жодної відмови в обслуговуванні, витоку даних чи реальних платежів.','Чесно позначайте кожен результат: <b>Confirmed</b> (відтворено), <b>Suspected</b> (лише ознаки) або <b>Not tested</b> (не тестовано).','Повідомляйте про секрети за місцем і типом, ніколи за значенням.'])}
+${CO('risk','Ризик','Сигнал сканера — це зачіпка, а не знахідка. Відтворіть його безпечно або повідомте як Suspected.')}`],
+  ['OWASP Top 10:2025 як чекліст тестувальника',`${T(['ID','Категорія','Що безпечно перевірити'],[
+   ['A01','Зламаний контроль доступу','Змінюйте id в URL і тілах запитів; відкривайте адмін-маршрути як звичайний користувач; функції завантаження за URL (SSRF тепер тут)'],
+   ['A02','Хибна конфігурація безпеки','Облікові записи за замовчуванням, режим налагодження, докладні помилки, відкриті консолі, відсутні заголовки'],
+   ['A03','Збої ланцюга постачання ПЗ','Незафіксовані чи непідтримувані залежності, немає lock-файла, секрети в CI (нове у 2025)'],
+   ['A04','Криптографічні збої','HTTP замість HTTPS, токени в URL, чутливі дані без захисту'],
+   ['A05','Ін’єкції','Нешкідливі маркери у вводі та місця, де вони з’являються знову: сторінки, запити, команди, шаблони'],
+   ['A06','Небезпечний дизайн','Немає обмежень частоти, пропущені кроки, від’ємні кількості, купони для повторного використання'],
+   ['A07','Збої автентифікації','Немає блокування, сесії не завершуються при виході, перелічення користувачів через повідомлення про помилки'],
+   ['A08','Збої цілісності ПЗ чи даних','Непідписані оновлення, небезпечна десеріалізація, сторонні скрипти без перевірки цілісності'],
+   ['A09','Збої журналювання та сповіщень','Чи журналюються входи й відмови в доступі? Чи є в журналах секрети?'],
+   ['A10','Неналежна обробка виняткових станів','Некоректний, завеликий і обрізаний ввід: чи помилки «відкривають двері» або розкривають внутрішні деталі? (нове у 2025)']])}
+${CO('note','Ключова ідея','Видання 2025 року додало A03 і A10 та влило підробку серверних запитів (SSRF) в A01. Старі звіти використовують назви 2021 року; «Vulnerable and Outdated Components» відповідає A03. Актуальний список дивіться на owasp.org.')}`],
+  ['Заголовки й cookie у тесті',`<p>Браузери вмикають захист за заголовками відповіді, тож їх дешево перевіряти.</p>
+${T(['Заголовок','Що робить'],[
+   ['Content-Security-Policy','Обмежує, звідки можна завантажувати скрипти, фрейми й інший вміст; головний захист від XSS. Його директива <code class="i">frame-ancestors</code> визначає, хто може вбудовувати сторінку, і замінює X-Frame-Options'],
+   ['Strict-Transport-Security','Велить браузерам використовувати лише HTTPS (ігнорується через звичайний HTTP)'],
+   ['X-Content-Type-Options: nosniff','Не дає браузеру вгадувати тип файла'],
+   ['Referrer-Policy','Керує тим, яку частину URL надсилають іншим сайтам'],
+   ['Permissions-Policy','Вимикає функції браузера, яких застосунок не використовує']])}
+${P(0)}
+${CO('tip','Порада','Відсутній заголовок сам по собі зазвичай Low чи Informational: оцінюйте його за тим, що він відкриває. Перевіряйте заголовки, які ви вирішили вимагати, щоб регресію було видно.')}`],
+  ['Авторизація: двоє користувачів, один об’єкт',`<p>Контроль доступу — найпоширеніша серйозна вада веб-застосунків (OWASP A01 і BOLA у списку для API). Перевіряйте його двома обліковими записами: користувач A створює приватний об’єкт, а користувач B намагається його прочитати, змінити й видалити.</p>
+${P(0)}
+<p>Повторіть для оновлення й видалення, для адмін-маршруту від імені звичайного користувача (вертикальне підвищення прав) і для другого орендаря. Модуль <a href="#api-testing">Тестування API</a> докладніше розглядає ризики OWASP для API.</p>`],
+  ['Залежності й секрети',UL(['Запускайте аудит менеджера пакетів (<code class="i">npm audit</code>, <code class="i">pip-audit</code>, <code class="i">dotnet list package --vulnerable</code>) і звіряйте з osv.dev. Не називайте залежність вразливою без advisory.','Комітьте lock-файли, фіксуйте версії й ставте залежності в CI через <code class="i">npm ci</code>.','Скануйте репозиторій та його історію на секрети (наприклад, gitleaks). Тримайте файли <code class="i">.env</code> поза Git.','Фіксуйте сторонні дії CI та образи контейнерів на версії чи digest.','Вважайте витеклий секрет скомпрометованим: змініть його. Видалити коміт недостатньо.'])],
+  ['Оцінювання знахідки',`<p>Цей хаб використовує просту домовленість: помножте <b>вплив</b> (від 1 до 5) на <b>ймовірність</b> (від 1 до 5) і прочитайте діапазон.</p>
+${T(['Оцінка','Серйозність'],[['20–25','Critical'],['12–19','High'],['6–11','Medium'],['2–5','Low'],['0–1','Informational']])}
+<p>Чуже замовлення, яке можна прочитати зміною id: вплив 5 × ймовірність 4 = 20, <b>Critical</b>. Відсутній Referrer-Policy на внутрішньому інструменті: 1 × 2 = 2, <b>Low</b>. Підвищуйте ймовірність для доступності з інтернету, знижуйте, коли доступ лише з localhost або інший захід уже блокує атаку, і скажіть, яке коригування застосували.</p>
+${CO('note','Ключова ідея','Впевненість (High, Medium, Low) повідомляють окремо, і вона не змінює серйозність. Для відомих вразливостей стороннього ПЗ беріть оцінку CVSS з advisory замість власної.')}`],
+ ],
+ quiz:[
+  ['Сканер повідомляє про можливу SQL-ін’єкцію, а ви її не відтворили. Як про це повідомити?',['Confirmed, Critical','Завжди Informational','Suspected, доки не відтворите безпечно','Не варто повідомляти'],'Ознака без відтвореного ефекту — це Suspected. Лише відтворена вада є Confirmed.'],
+  ['Користувач B запитує замовлення користувача A за id і отримує дані A з кодом 200. Яка категорія OWASP Top 10:2025 пасує найкраще?',['A02 Хибна конфігурація безпеки','A05 Ін’єкції','A01 Зламаний контроль доступу','A10 Неналежна обробка виняткових станів'],'Читання чужого об’єкта зміною id — це вада контролю доступу (BOLA / IDOR).'],
+  ['Які дві категорії нові в OWASP Top 10:2025?',['Ін’єкції та Небезпечний дизайн','Зламаний контроль доступу та Криптографічні збої','Журналювання безпеки та SSRF','Збої ланцюга постачання ПЗ та Неналежна обробка виняткових станів'],'A03 і A10 нові у 2025; SSRF влили в A01.'],
+  ['Який заголовок відповіді велить браузерам надалі використовувати лише HTTPS?',['Strict-Transport-Security','Referrer-Policy','X-Content-Type-Options','Permissions-Policy'],'HSTS змушує браузер переходити на HTTPS. Браузери ігнорують його, коли він отриманий через звичайний HTTP.'],
+  ['Вплив 4 і ймовірність 4 дають 16. Який це діапазон серйозності (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',['Low','Medium','Critical','High'],'4 × 4 = 16, це діапазон 12–19: High.'],
+  ['У сесійного cookie немає прапорця HttpOnly. Що це дозволяє?',['Cookie не можна надсилати через HTTPS','Скриптам сторінки читати cookie, тож вада XSS може викрасти сесію','Іншим сайтам вбудовувати сторінку','Cookie одразу втрачає чинність'],'HttpOnly ховає cookie від JavaScript. Без нього впроваджений скрипт може прочитати й виманити сесію.'],
+ ]};
+
+M['defect-reporting']={title:'Звіти про дефекти та QA-звіти',
+ sum:'Напишіть дефект, який інша людина може відтворити, розрізняйте серйозність і пріоритет, чесно позначайте докази та завершуйте вердиктом за чіткими правилами.',
+ sections:[
+  ['Що ви дізнаєтеся',UL(['Писати звіт про дефект, який інша людина відтворить без уточнювальних запитань','Розрізняти серйозність і пріоритет','Позначати кожне твердження як Confirmed, Suspected або Not tested','Обирати фінальний статус QA за чіткими правилами','Структурувати звіт так, щоб керівник прочитав його за дві хвилини'])],
+  ['Дефект, який хтось інший може відтворити',`<p>Звіт корисний, коли розробник, що ніколи не бачив проблеми, може відтворити її лише з тексту. Більшість звітів, що повертаються, не мають одних і тих самих кількох речей.</p>
+${T(['Поле','Що писати'],[
+   ['Заголовок','Що не так і де, одним рядком'],
+   ['Середовище','Браузер і ОС, версія застосунку, тестовий акаунт чи роль'],
+   ['Передумови','Стан, потрібний до кроку 1'],
+   ['Кроки','Пронумеровані й точні, від відомого стану'],
+   ['Очікуване / фактичне','Обидва, поруч'],
+   ['Докази','Скриншот, trace, запит і відповідь, рядки журналу: справжні, із замаскованими секретами'],
+   ['Відтворюваність','Завжди, періодично (як часто) або не відтворено'],
+   ['Серйозність і пріоритет','Вплив із причиною; як швидко виправити']])}
+${T(['Слабко','Краще'],[
+   ['«Оформлення замовлення зламане»','«Оформлення замовлення: кнопка Pay нічого не робить для збереженої картки Visa (Chromium, збірка 2.14.1)»'],
+   ['«Іноді не працює»','«Падає в 3 із 10 запусків; завжди проходить, коли в кошику один товар»'],
+   ['«Має працювати»','«Очікувалось: сторінка підтвердження. Фактично: лишається на оплаті; консоль показує HTTP 500 від /api/pay»']])}
+${CO('tip','Порада','Trace Playwright чи коротке відео екрана часто замінює сторінку опису. Додайте його.')}`],
+  ['Серйозність і пріоритет',`<p><b>Серйозність</b> — це вплив дефекту, якщо він потрапить у реліз. <b>Пріоритет</b> — як швидко його слід виправити. Вони пов’язані, але різні, і зазвичай мають різних власників: QA пропонує серйозність, власник продукту встановлює пріоритет.</p>
+${T(['Серйозність','Значення','Приклад'],[
+   ['Critical','Втрата чи пошкодження даних, злам безпеки або ключовий сценарій неможливий без обхідного шляху','Будь-який авторизований користувач може читати замовлення інших'],
+   ['High','Зламана основна функція або серйозна вразливість, а обхідний шлях складний чи ризикований','Оформлення замовлення не працює для одного способу оплати'],
+   ['Medium','Часткова втрата функції або реальна вразливість з обхідним шляхом чи обмеженим впливом','Фільтр ігнорує один критерій'],
+   ['Low','Незначний дефект із мізерним впливом','Напис зсунутий'],
+   ['Informational','Спостереження чи покращення, а не дефект','Відсутній необов’язковий заголовок відповіді']])}
+${T(['Пріоритет','Значення'],[['P1','Виправити до релізу'],['P2','Виправити в поточному циклі'],['P3','Запланувати'],['P4','Беклог']])}
+${CO('note','Ключова ідея','Одруківка в назві компанії на головній сторінці — це Low за серйозністю, але P1 напередодні запуску. Збій в експорті, яким користуються раз на рік, може мати High серйозність, але лише P3. Завжди пояснюйте серйозність одним реченням.')}`],
+  ['Confirmed, Suspected, Not tested',`<p>Кожне твердження у звіті має одну з трьох позначок, щоб читачі знали, наскільки йому довіряти.</p>
+${UL(['<b>Confirmed</b>: відтворено, з доказами, які можна показати.','<b>Suspected</b>: є ознаки, але ефект не доведено. Сигнал сканера чи «запах коду» починаються тут.','<b>Not tested</b>: ви цього не перевіряли. Скажіть про це й чому.'])}
+<p>Три правила тримають звіти чесними: відсутність доказів не є доказом відсутності; ніколи не вигадуйте журнали, версії чи результати; відокремлюйте спостереження від припущень. Оцінюючи знахідку, користуйтеся впливом × ймовірністю, як у модулі <a href="#security-testing">Тестування безпеки для QA</a>, а впевненість повідомляйте окремо.</p>`],
+  ['Фінальний статус',`<p>Завершуйте QA-звіт одним статусом, обраним за чіткими правилами, щоб двоє людей, які читають ті самі знахідки, дійшли того самого вердикту. Перевіряйте правила по черзі; перше збіжне вирішує.</p>
+${T(['Порядок','Статус','Коли застосовувати'],[
+   ['1','FAIL','Будь-яка Confirmed Critical чи High знахідка, або ключовий користувацький сценарій Confirmed зламаний'],
+   ['2','NOT ENOUGH EVIDENCE','Ціль була недоступна, або перевірено надто мало, щоб зробити будь-який висновок'],
+   ['3','PARTIALLY VERIFIED','Частина обсягу заблокована чи не тестована, або нерозв’язана Suspected Critical чи High знахідка (і жодної Confirmed Critical чи High)'],
+   ['4','PASS WITH FINDINGS','Весь обсяг перевірено, відкритими лишаються лише Medium, Low чи Informational знахідки'],
+   ['5','PASS','Весь обсяг перевірено, і нічого вище Informational не лишається відкритим']])}
+${CO('risk','Ризик','Ніколи не обирайте PASS лише тому, що дефектів не знайдено. PASS вимагає, щоб було перевірено весь запитаний обсяг.')}`],
+  ['Структура звіту',`<p>Ставте вердикт першим. Читач має змогу зупинитися після першого розділу й усе одно діяти.</p>
+${T(['№','Розділ','Що містить'],[
+   ['1','Виконавче резюме','Вердикт, три головні проблеми та один наступний крок'],
+   ['2','Обсяг і обмеження','Що перевірено, що ні (і чому), припущення, інструменти'],
+   ['3','Огляд знахідок','ID, серйозність, ділянка, назва, впевненість'],
+   ['4','Докладні знахідки','Докази, вплив, пропоноване виправлення, як його перевірити'],
+   ['5','Що виглядало здоровим','Ділянки, перевірені без зауважень'],
+   ['6','Рекомендації','Упорядковані за серйозністю та зусиллями'],
+   ['7','Подальші тести','Негативні, граничні й дослідницькі'],
+   ['8','Що ще перевірити?','Прогалини, на які варто глянути вдруге']])}
+${CO('tip','Порада','Розділ 5 важливий. Чиста ділянка, названа чистою, показує читачам, де можна не хвилюватися. До кожного пропонованого виправлення додайте його ризик, як його скасувати й як підтвердити, що воно спрацювало.')}`],
+ ],
+ quiz:[
+  ['Яке твердження про серйозність і пріоритет правильне?',['Серйозність — як швидко виправити; пріоритет — вплив','Це те саме','Серйозність — вплив, якщо дефект потрапить у реліз; пріоритет — як швидко виправити','Серйозність встановлюють лише розробники'],'Серйозність описує вплив; пріоритет — рішення щодо планування. Косметичний дефект може бути терміновим, а серйозний — зачекати.'],
+  ['Одруківка в назві компанії на головній сторінці напередодні запуску найкраще описується як…',['High серйозність, P4','Critical серйозність, P3','Informational, без пріоритету','Low серйозність, P1'],'Вплив малий (Low), але час робить її терміновою (P1).'],
+  ['У звіті сказано «Оформлення замовлення іноді зламане». Якої найкориснішої інформації бракує?',['Хто це спричинив','Точні кроки, середовище, очікуваний і фактичний результат та як часто це трапляється','Довший заголовок','Припущення про першопричину'],'Відтворювані кроки й контекст дають розробнику побачити проблему. Звинувачення й здогадки — ні.'],
+  ['Ви відтворили ваду, яка дозволяє одному користувачеві читати замовлення іншого. Яка позначка?',['Suspected','Not tested','Confirmed','Informational'],'Відтворена знахідка з доказами — це Confirmed.'],
+  ['Весь обсяг перевірено; відкритими лишаються одна Medium і дві Low знахідки; жодної High чи Critical. Який статус?',['PASS','PARTIALLY VERIFIED','FAIL','PASS WITH FINDINGS'],'Весь обсяг перевірено, відкритими лише Medium, Low чи Informational: правило 4, PASS WITH FINDINGS.'],
+  ['Один сервіс був недоступний, тож половину обсягу не протестовано. Другу половину перевірено, Confirmed Critical чи High знахідок немає. Який статус?',['PASS WITH FINDINGS','NOT ENOUGH EVIDENCE','PARTIALLY VERIFIED','PASS'],'Частина обсягу Not tested, а Confirmed Critical чи High немає, тож діє правило 3. Правило 2 — коли перевірено надто мало, щоб зробити будь-який висновок.'],
+ ]};
+
+(TR.uk.glossary=TR.uk.glossary||[]).push(
+ ['Таблиця рішень','Сітка комбінацій умов і їхніх результатів; однакові рядки об’єднують, щоб кожен окремий результат тестувався один раз.'],
+ ['Тестування переходів станів','Перевірка дозволених і відхилених переходів між станами, наприклад замовлення від чернетки до схваленого.'],
+ ['Попарне тестування','Покриття кожної пари значень параметрів принаймні раз замість кожної комбінації; набори генерують інструменти на кшталт PICT.'],
+ ['Припущення про помилки','Вибір кейсів із досвіду того, де програми зазвичай ламаються: подвійне надсилання, величезний ввід, спливлі сесії.'],
+ ['Хартія тесту','Місія в одне речення для обмеженої в часі дослідницької сесії: дослідити ділянку, з певними ресурсами, щоб виявити ризик.'],
+ ['Content-Security-Policy','Заголовок відповіді, що обмежує, звідки сторінка може завантажувати скрипти, фрейми й інший вміст; головний захист від XSS.'],
+ ['Збій ланцюга постачання ПЗ','OWASP Top 10:2025 A03: ризик від залежностей, збірних конвеєрів і розповсюдження, як-от незафіксовані чи підмінені пакети.'],
+ ['Confirmed проти suspected','Позначки доказів у QA-звіті: Confirmed — відтворено з доказами; Suspected — лише ознаки.'],
+);
+
+TR.uk.exam.push(
+ ['Пароль має містити від 8 до 64 символів. Які довжини утворюють граничний набір за методом трьох значень?',['7, 8, 9 та 63, 64, 65','Лише 8 і 64','1, 32, 100','0, 8, 64'],'Метод трьох значень перевіряє кожну межу та обох її сусідів.'],
+ ['Що гарантує попарний тестовий набір?',['Покрито кожну триступеневу комбінацію','Знайдено всі дефекти','Кожна пара значень параметрів з’являється принаймні в одному тесті','Використано лише коректні комбінації'],'Попарне тестування покриває всі двосторонні взаємодії, маючи значно менше тестів, ніж повний добуток.'],
+ ['Таблиця рішень має три умови «так/ні». Скільки існує комбінацій до об’єднання однакових результатів?',['3','8','6','9'],'2 × 2 × 2 = 8.'],
+ ['Сканер позначив можливий XSS, а тестувальник його не відтворив. Яка позначка пасує?',['Confirmed','Suspected','Fixed','Лише Informational'],'Ознаки без відтвореного ефекту — це Suspected.'],
+ ['Який заголовок відповіді обмежує, звідки сторінка може завантажувати скрипти?',['Referrer-Policy','Cache-Control','Content-Security-Policy','Accept-Language'],'Content-Security-Policy обмежує джерела скриптів, фреймів та іншого вмісту.'],
+ ['Вплив 5 і ймовірність 3 дають 15. Який це діапазон (20–25 Critical, 12–19 High, 6–11 Medium, 2–5 Low)?',['Critical','High','Medium','Low'],'5 × 3 = 15, це діапазон 12–19: High.'],
+);
+})();
 (function(){
 applyTR();
 const KEY='automation-hub.v1';
@@ -6376,6 +7231,8 @@ function applyShell(){
  set('.side__progress .label',e=>e.textContent=t('yourProgress'));
  set('#search',e=>{e.placeholder=t('searchPh');e.setAttribute('aria-label',t('searchPh'));});
  set('#resetBtn',e=>e.textContent=t('resetProgress'));
+ set('#exportBtn',e=>e.textContent=t('exportProgress'));
+ set('#importBtn',e=>e.textContent=t('importProgress'));
  set('#menuBtn',e=>e.textContent=t('menu'));
  set('#skip',e=>e.textContent=t('skipLink'));
  set('.side__foot',e=>{const old=e.querySelector('.lang');if(old)old.remove();
@@ -6423,6 +7280,8 @@ function home(){
   const answered=Object.keys(st.ans).length,correct=Object.entries(st.ans).filter(([k,v])=>{const[id,q]=k.split(':');const m=MODULES.find(x=>x.id===id);return m&&m.quiz[+q]&&m.quiz[+q].a===v}).length;
   const mins=MODULES.reduce((a,m)=>a+m.min,0);
   const remain=MODULES.filter(m=>!st.done[m.id]).reduce((a,m)=>a+m.min,0);
+  /* modules with wrong quiz answers, worst first: a cheap "what should I re-read" list built from the saved answers */
+  const weak=MODULES.map(m=>({m,w:m.quiz.filter((q,k)=>{const a=st.ans[m.id+':'+k];return a!==undefined&&a!==q.a;}).length})).filter(x=>x.w).sort((a,b)=>b.w-a.w).slice(0,6);
   main.innerHTML=`<div class="wrap">
   <section class="hero">
     <div><span class="label">${t('heroLabel')}</span>
@@ -6443,6 +7302,7 @@ function home(){
     <div class="stat"><b>${correct}<span class="of"> / ${answered}</span></b><span>${t('statQuiz')}</span></div>
     <div class="stat"><b>${Object.values(st.fw).filter(Boolean).length}<span class="of"> / ${FRAMEWORK_CHECKS.length}</span></b><span>${t('statFw')}</span></div>
   </section>
+  ${weak.length?`<section class="track" id="weak"><div class="track__head"><div><h2>${t('weakTitle')}</h2><p>${t('weakBlurb')}</p></div></div><div class="grid">${weak.map(({m,w})=>`<a class="card" href="#${m.id}"><span class="card__eyebrow">${t('weakWrong',w)}</span><h3 class="card__title">${esc(m.title)}</h3></a>`).join('')}</div></section>`:''}
   ${TRACKS.map(tk=>{const ms=MODULES.map((m,i)=>[m,i]).filter(([m])=>m.track===tk.id);const dn=ms.filter(([m])=>st.done[m.id]).length;
    return `<section class="track"><div class="track__head"><div><h2>${esc(tk.name)}</h2><p>${esc(tk.blurb)}</p></div><span class="badge ${dn===ms.length?'badge--pass':''}">${dn===ms.length?'✓ ':''}${dn}/${ms.length}</span></div><div class="grid">${ms.map(([m,i])=>card(m,i)).join('')}</div></section>`}).join('')}
   <section class="track"><div class="track__head"><div><h2>${t('practice')}</h2><p>${t('practiceBlurb')}</p></div></div>
@@ -6485,7 +7345,7 @@ function bindQuiz(qs,keyFn,rerender,keepScroll){
 let mixed=null;
 function mixedQuiz(fresh){
   const all=[];MODULES.forEach(m=>m.quiz.forEach((q,k)=>all.push({m,q,k})));
-  if(!mixed||fresh){mixed={items:all.sort(()=>Math.random()-.5).slice(0,10),ans:{}};}
+  if(!mixed||fresh){mixed={items:shuffle(all).slice(0,10),ans:{}};}
   const it=mixed.items,done=Object.keys(mixed.ans).length,score=it.filter((x,k)=>mixed.ans[k]===x.q.a).length;
   const saveAns=st.ans;st.ans=Object.assign({},mixed.ans);
   const html=quizHTML(it.map(x=>x.q),k=>String(k));st.ans=saveAns;
@@ -6514,7 +7374,7 @@ function flashcards(){
   const go=d=>{fc.i=(fc.i+d+list.length)%list.length;fc.flipped=false;flashcards();$('#card').focus();};
   $('#card').onclick=()=>{fc.flipped=!fc.flipped;$('#card').classList.toggle('flipped',fc.flipped);};
   $('#prev').onclick=()=>go(-1);$('#next').onclick=()=>go(1);
-  $('#shuf').onclick=()=>{fc.order=[...list.keys()].sort(()=>Math.random()-.5);fc.i=0;fc.flipped=false;flashcards();};
+  $('#shuf').onclick=()=>{fc.order=shuffle([...list.keys()]);fc.i=0;fc.flipped=false;flashcards();};
   main.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{fc.track=c.dataset.t;fc.i=0;fc.order=null;fc.flipped=false;flashcards();});
   fcKeys=e=>{if(route()!=='flashcards'||e.target.matches('input'))return;if(e.key==='ArrowRight')go(1);else if(e.key==='ArrowLeft')go(-1);};
 }
@@ -6741,6 +7601,32 @@ $('#menuBtn').onclick=()=>setNav(!app.classList.contains('nav-open'));
 $('#skip').onclick=e=>{e.preventDefault();main.focus();main.scrollIntoView();};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&app.classList.contains('nav-open'))setNav(false,true)});
 document.addEventListener('click',e=>{if(app.classList.contains('nav-open')&&!e.target.closest('#side')&&!e.target.closest('#menuBtn'))setNav(false)});
+/* progress backup: export writes a JSON file; import validates it like any stored data and MERGES, so a restore never removes newer work */
+const BACKUP_APP='automation-hub',BACKUP_MAX=1e6;
+const orMerge=(a,b)=>{const o={...a};for(const k in b)o[k]=!!(a[k]||b[k]);return o;};
+function mergeProgress(a,b){
+  const seen=new Set();
+  const hist=[...a.hist,...b.hist].sort((x,y)=>x.at-y.at).filter(h=>{const k=h.kind+':'+h.at;if(seen.has(k))return false;seen.add(k);return true;}).slice(-10);
+  return {done:orMerge(a.done,b.done),fw:orMerge(a.fw,b.fw),path:orMerge(a.path,b.path),ans:{...a.ans,...b.ans},pk:{...a.pk,...b.pk},hist};
+}
+const flash=(b,msg,base)=>{b.textContent=msg;say(msg);setTimeout(()=>{b.textContent=t(base);},3000);};
+$('#exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify({app:BACKUP_APP,version:1,exported:new Date().toISOString(),data:st},null,1)],{type:'application/json'});
+  const a=document.createElement('a'),url=URL.createObjectURL(blob);
+  a.href=url;a.download='automation-hub-progress-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('#importBtn').onclick=()=>$('#importFile').click();
+$('#importFile').onchange=async e=>{
+  const f=e.target.files[0],b=$('#importBtn');e.target.value='';
+  try{
+    if(!f||f.size>BACKUP_MAX)throw new Error('size');
+    const d=JSON.parse(await f.text());
+    if(!d||d.app!==BACKUP_APP||d.version!==1||!d.data||typeof d.data!=='object')throw new Error('shape');
+    st=mergeProgress(st,clean(d.data));save();renderToc($('#search').value);render();
+    flash(b,t('importOk',progress(),MODULES.length),'importProgress');
+  }catch(err){flash(b,t('importBad'),'importProgress');}
+};
 let armed=false;$('#resetBtn').onclick=()=>{const b=$('#resetBtn');if(!armed){armed=true;b.textContent=t('confirmReset');setTimeout(()=>{armed=false;b.textContent=t('resetProgress')},3000);return;}
   st={done:{},ans:{},fw:{},path:{},pk:{},hist:[]};exam=null;saveExam();save();armed=false;b.textContent=t('progressReset');renderToc();render();};
 renderToc();render();

@@ -43,6 +43,8 @@ function applyShell(){
  set('.side__progress .label',e=>e.textContent=t('yourProgress'));
  set('#search',e=>{e.placeholder=t('searchPh');e.setAttribute('aria-label',t('searchPh'));});
  set('#resetBtn',e=>e.textContent=t('resetProgress'));
+ set('#exportBtn',e=>e.textContent=t('exportProgress'));
+ set('#importBtn',e=>e.textContent=t('importProgress'));
  set('#menuBtn',e=>e.textContent=t('menu'));
  set('#skip',e=>e.textContent=t('skipLink'));
  set('.side__foot',e=>{const old=e.querySelector('.lang');if(old)old.remove();
@@ -90,6 +92,8 @@ function home(){
   const answered=Object.keys(st.ans).length,correct=Object.entries(st.ans).filter(([k,v])=>{const[id,q]=k.split(':');const m=MODULES.find(x=>x.id===id);return m&&m.quiz[+q]&&m.quiz[+q].a===v}).length;
   const mins=MODULES.reduce((a,m)=>a+m.min,0);
   const remain=MODULES.filter(m=>!st.done[m.id]).reduce((a,m)=>a+m.min,0);
+  /* modules with wrong quiz answers, worst first: a cheap "what should I re-read" list built from the saved answers */
+  const weak=MODULES.map(m=>({m,w:m.quiz.filter((q,k)=>{const a=st.ans[m.id+':'+k];return a!==undefined&&a!==q.a;}).length})).filter(x=>x.w).sort((a,b)=>b.w-a.w).slice(0,6);
   main.innerHTML=`<div class="wrap">
   <section class="hero">
     <div><span class="label">${t('heroLabel')}</span>
@@ -110,6 +114,7 @@ function home(){
     <div class="stat"><b>${correct}<span class="of"> / ${answered}</span></b><span>${t('statQuiz')}</span></div>
     <div class="stat"><b>${Object.values(st.fw).filter(Boolean).length}<span class="of"> / ${FRAMEWORK_CHECKS.length}</span></b><span>${t('statFw')}</span></div>
   </section>
+  ${weak.length?`<section class="track" id="weak"><div class="track__head"><div><h2>${t('weakTitle')}</h2><p>${t('weakBlurb')}</p></div></div><div class="grid">${weak.map(({m,w})=>`<a class="card" href="#${m.id}"><span class="card__eyebrow">${t('weakWrong',w)}</span><h3 class="card__title">${esc(m.title)}</h3></a>`).join('')}</div></section>`:''}
   ${TRACKS.map(tk=>{const ms=MODULES.map((m,i)=>[m,i]).filter(([m])=>m.track===tk.id);const dn=ms.filter(([m])=>st.done[m.id]).length;
    return `<section class="track"><div class="track__head"><div><h2>${esc(tk.name)}</h2><p>${esc(tk.blurb)}</p></div><span class="badge ${dn===ms.length?'badge--pass':''}">${dn===ms.length?'✓ ':''}${dn}/${ms.length}</span></div><div class="grid">${ms.map(([m,i])=>card(m,i)).join('')}</div></section>`}).join('')}
   <section class="track"><div class="track__head"><div><h2>${t('practice')}</h2><p>${t('practiceBlurb')}</p></div></div>
@@ -152,7 +157,7 @@ function bindQuiz(qs,keyFn,rerender,keepScroll){
 let mixed=null;
 function mixedQuiz(fresh){
   const all=[];MODULES.forEach(m=>m.quiz.forEach((q,k)=>all.push({m,q,k})));
-  if(!mixed||fresh){mixed={items:all.sort(()=>Math.random()-.5).slice(0,10),ans:{}};}
+  if(!mixed||fresh){mixed={items:shuffle(all).slice(0,10),ans:{}};}
   const it=mixed.items,done=Object.keys(mixed.ans).length,score=it.filter((x,k)=>mixed.ans[k]===x.q.a).length;
   const saveAns=st.ans;st.ans=Object.assign({},mixed.ans);
   const html=quizHTML(it.map(x=>x.q),k=>String(k));st.ans=saveAns;
@@ -181,7 +186,7 @@ function flashcards(){
   const go=d=>{fc.i=(fc.i+d+list.length)%list.length;fc.flipped=false;flashcards();$('#card').focus();};
   $('#card').onclick=()=>{fc.flipped=!fc.flipped;$('#card').classList.toggle('flipped',fc.flipped);};
   $('#prev').onclick=()=>go(-1);$('#next').onclick=()=>go(1);
-  $('#shuf').onclick=()=>{fc.order=[...list.keys()].sort(()=>Math.random()-.5);fc.i=0;fc.flipped=false;flashcards();};
+  $('#shuf').onclick=()=>{fc.order=shuffle([...list.keys()]);fc.i=0;fc.flipped=false;flashcards();};
   main.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{fc.track=c.dataset.t;fc.i=0;fc.order=null;fc.flipped=false;flashcards();});
   fcKeys=e=>{if(route()!=='flashcards'||e.target.matches('input'))return;if(e.key==='ArrowRight')go(1);else if(e.key==='ArrowLeft')go(-1);};
 }
@@ -408,6 +413,32 @@ $('#menuBtn').onclick=()=>setNav(!app.classList.contains('nav-open'));
 $('#skip').onclick=e=>{e.preventDefault();main.focus();main.scrollIntoView();};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&app.classList.contains('nav-open'))setNav(false,true)});
 document.addEventListener('click',e=>{if(app.classList.contains('nav-open')&&!e.target.closest('#side')&&!e.target.closest('#menuBtn'))setNav(false)});
+/* progress backup: export writes a JSON file; import validates it like any stored data and MERGES, so a restore never removes newer work */
+const BACKUP_APP='automation-hub',BACKUP_MAX=1e6;
+const orMerge=(a,b)=>{const o={...a};for(const k in b)o[k]=!!(a[k]||b[k]);return o;};
+function mergeProgress(a,b){
+  const seen=new Set();
+  const hist=[...a.hist,...b.hist].sort((x,y)=>x.at-y.at).filter(h=>{const k=h.kind+':'+h.at;if(seen.has(k))return false;seen.add(k);return true;}).slice(-10);
+  return {done:orMerge(a.done,b.done),fw:orMerge(a.fw,b.fw),path:orMerge(a.path,b.path),ans:{...a.ans,...b.ans},pk:{...a.pk,...b.pk},hist};
+}
+const flash=(b,msg,base)=>{b.textContent=msg;say(msg);setTimeout(()=>{b.textContent=t(base);},3000);};
+$('#exportBtn').onclick=()=>{
+  const blob=new Blob([JSON.stringify({app:BACKUP_APP,version:1,exported:new Date().toISOString(),data:st},null,1)],{type:'application/json'});
+  const a=document.createElement('a'),url=URL.createObjectURL(blob);
+  a.href=url;a.download='automation-hub-progress-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('#importBtn').onclick=()=>$('#importFile').click();
+$('#importFile').onchange=async e=>{
+  const f=e.target.files[0],b=$('#importBtn');e.target.value='';
+  try{
+    if(!f||f.size>BACKUP_MAX)throw new Error('size');
+    const d=JSON.parse(await f.text());
+    if(!d||d.app!==BACKUP_APP||d.version!==1||!d.data||typeof d.data!=='object')throw new Error('shape');
+    st=mergeProgress(st,clean(d.data));save();renderToc($('#search').value);render();
+    flash(b,t('importOk',progress(),MODULES.length),'importProgress');
+  }catch(err){flash(b,t('importBad'),'importProgress');}
+};
 let armed=false;$('#resetBtn').onclick=()=>{const b=$('#resetBtn');if(!armed){armed=true;b.textContent=t('confirmReset');setTimeout(()=>{armed=false;b.textContent=t('resetProgress')},3000);return;}
   st={done:{},ans:{},fw:{},path:{},pk:{},hist:[]};exam=null;saveExam();save();armed=false;b.textContent=t('progressReset');renderToc();render();};
 renderToc();render();

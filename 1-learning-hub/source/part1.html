@@ -96,7 +96,7 @@ a.card:hover{box-shadow:var(--shadow-raised);border-color:var(--line-strong);col
 .callout--note{background:var(--brand-soft)} .callout--note .callout__label{color:var(--brand)}
 pre.code{background:var(--code-bg);color:var(--code-ink);font:400 13.5px/22px var(--font-mono);border-radius:var(--radius-md);padding:var(--space-4);overflow-x:auto;margin:0;white-space:pre}
 pre.code .c{color:var(--code-muted)} pre.code .k{color:var(--code-key)} pre.code .s{color:var(--code-str)}
-code.i{font:400 .875em/1 var(--font-mono);background:var(--surface-200);padding:2px 5px;border-radius:var(--radius-sm)}
+code.i{font:400 .875em/1 var(--font-mono);background:var(--surface-200);padding:2px 5px;border-radius:var(--radius-sm);overflow-wrap:anywhere}
 details.faq{border:1px solid var(--line);border-radius:var(--radius-md);background:var(--surface-000)}
 details.faq+details.faq{margin-top:var(--space-1h)}
 details.faq summary{cursor:pointer;padding:var(--space-3) var(--space-4);font-weight:600;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:var(--space-3)}
@@ -293,7 +293,7 @@ div.opt{cursor:default}
     </div>
     <input class="search" id="search" type="search" placeholder="Search modules…" aria-label="Search modules">
     <nav class="toc" id="toc"></nav>
-    <div class="side__foot"><button class="btn btn--ghost btn--sm" id="resetBtn" type="button">Reset progress</button></div>
+    <div class="side__foot"><button class="btn btn--ghost btn--sm" id="exportBtn" type="button">Export progress</button><button class="btn btn--ghost btn--sm" id="importBtn" type="button">Import progress</button><button class="btn btn--ghost btn--sm" id="resetBtn" type="button">Reset progress</button><input type="file" id="importFile" accept="application/json,.json" hidden></div>
   </aside>
   <div id="content">
     <div class="topbar">

@@ -119,6 +119,93 @@ const setDeadline = (page, ms) => page.evaluate(([k, d]) => {
   await p.goto(gallery); await p.waitForTimeout(200);
   check('gallery defines --shadow-raised', (await p.evaluate(() => getComputedStyle(document.body).getPropertyValue('--shadow-raised'))).length > 5);
   await ctx.close();
+
+  // ---------- v6 modules are translated, not silently falling back to English
+  ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  p = await ctx.newPage(); watch(p, 'v6');
+  const titles = {};
+  for (const lang of ['en', 'uk', 'pl', 'es']) {
+    for (const id of ['test-design', 'security-testing', 'defect-reporting']) {
+      await p.goto(`${hub}?lang=${lang}#${id}`); await p.waitForTimeout(80);
+      titles[`${lang}/${id}`] = (await p.locator('main h1').textContent()).trim();
+    }
+  }
+  const sameAsEn = Object.keys(titles).filter(k => !k.startsWith('en/') && titles[k] === titles['en/' + k.split('/')[1]]);
+  check('new modules have a translated title in uk, pl and es', sameAsEn.length === 0, sameAsEn.join(', '));
+  await p.goto(`${hub}#test-design`); await p.waitForTimeout(80);
+  check('test-design shows its two code samples', await p.locator('main pre.code').count() === 2);
+  await ctx.close();
+
+  // ---------- the two shuffles run (mixed quiz draws 10 distinct questions; flashcards keep every card)
+  ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  p = await ctx.newPage(); watch(p, 'shuffle');
+  await p.goto(hub + '#quiz'); await p.waitForTimeout(100);
+  await p.locator('#newQ').click(); await p.waitForTimeout(80);
+  const qs = await p.locator('#mq .q__text').allTextContents();
+  check('mixed quiz draws 10 distinct questions', qs.length === 10 && new Set(qs.map(s => s.replace(/^\d+\.\s*/, ''))).size === 10, `${qs.length}`);
+  await p.goto(hub + '#flashcards'); await p.waitForTimeout(100);
+  const cardCount = await p.evaluate(() => GLOSSARY.length);
+  await p.locator('#shuf').click(); await p.waitForTimeout(80);
+  const seen = new Set();
+  for (let i = 0; i < cardCount; i++) {   // term + definition: one term ("Boundary value analysis") is deliberately on two cards
+    seen.add((await p.locator('.fc__term').first().textContent()).trim() + '|' + (await p.locator('.fc__def').first().textContent()).trim());
+    await p.locator('#next').click(); await p.waitForTimeout(15);
+  }
+  check('shuffled flashcards still show every card once', seen.size === cardCount, `${seen.size}/${cardCount}`);
+  await ctx.close();
+
+  // ---------- weak spots, progress export and import
+  const BAD = 'Not a valid progress file';
+  const progText = pg => pg.locator('#progTxt').textContent().then(s => s.trim());
+  ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, acceptDownloads: true });
+  p = await ctx.newPage(); watch(p, 'backup');
+  await p.goto(hub); await p.waitForTimeout(120);
+  check('no weak-spots list before any wrong answer', await p.locator('#weak').count() === 0);
+  await p.goto(hub + '#playwright'); await p.waitForTimeout(120);
+  const wrongJ = await p.evaluate(() => (MODULES.find(m => m.id === 'playwright').quiz[0].a === 0 ? 1 : 0));
+  await p.locator(`#quiz .q >> nth=0 >> .opt[data-j="${wrongJ}"]`).click();
+  await p.locator('#doneBtn').click(); await p.waitForTimeout(150);
+  await p.goto(hub); await p.waitForTimeout(120);
+  check('a wrong answer puts its module in the weak-spots list', await p.locator('#weak a[href="#playwright"]').count() === 1);
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.locator('#exportBtn').click()]);
+  const fs = require('fs'), os = require('os');
+  const backupPath = path.join(os.tmpdir(), `automation-hub-e2e-${process.pid}.json`);
+  await dl.saveAs(backupPath);                       // the download's own temp file dies with its context
+  const parsed = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+  check('export is a versioned JSON file with the progress', parsed.app === 'automation-hub' && parsed.version === 1 && parsed.data.done.playwright === true && /^automation-hub-progress-\d{4}-\d\d-\d\d\.json$/.test(dl.suggestedFilename()), dl.suggestedFilename());
+  await ctx.close();
+
+  ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  p = await ctx.newPage(); watch(p, 'restore');
+  await p.goto(hub + '#cypress'); await p.waitForTimeout(120);
+  await p.locator('#doneBtn').click(); await p.waitForTimeout(150);   // local progress the import must not remove
+  await p.goto(hub); await p.waitForTimeout(120);
+  await p.locator('#importFile').setInputFiles(backupPath); await p.waitForTimeout(250);
+  const total = await p.evaluate(() => MODULES.length);
+  check('import merges: both the local and the imported module are done', (await progText(p)) === `2 / ${total}`, await progText(p));
+  check('imported wrong answer shows in the weak-spots list', await p.locator('#weak a[href="#playwright"]').count() === 1);
+  check('import announces its result on the button', /^Imported: 2 \//.test(await p.locator('#importBtn').textContent()));
+
+  const reject = async (name, content) => {
+    await p.locator('#importFile').setInputFiles({ name, mimeType: 'application/json', buffer: Buffer.from(content) });
+    await p.waitForTimeout(200);
+    const ok = (await p.locator('#importBtn').textContent()).trim() === BAD && (await progText(p)) === `2 / ${total}`;
+    await p.waitForTimeout(3100);   // let the message clear so the next check sees its own
+    return ok;
+  };
+  await p.waitForTimeout(3100);     // the "Imported" message above
+  check('import rejects a file from another app', await reject('x.json', '{"app":"other","version":1,"data":{}}'));
+  check('import rejects an unknown file version', await reject('v.json', '{"app":"automation-hub","version":2,"data":{}}'));
+  check('import rejects invalid JSON', await reject('y.json', 'not json'));
+  check('import rejects a file over 1 MB', await reject('big.json', '{"app":"automation-hub","version":1,"data":{"pad":"' + 'x'.repeat(1000100) + '"}}'));
+  const evil = JSON.stringify({ app: 'automation-hub', version: 1, data: { done: { '<img src=x onerror=alert(1)>': 'yes', playwright: true }, ans: { 'playwright:0': 999, 'playwright:1': 0 }, fw: 'oops', hist: [{ kind: 'nope', score: -1 }] } });
+  await p.locator('#importFile').setInputFiles({ name: 'z.json', mimeType: 'application/json', buffer: Buffer.from(evil) });
+  await p.waitForTimeout(250);
+  const stored = await p.evaluate(() => JSON.parse(localStorage.getItem('automation-hub.v1')));
+  check('import keeps only well-formed values from a tampered file',
+    !('<img src=x onerror=alert(1)>' in stored.done) && stored.ans['playwright:0'] !== 999 && stored.ans['playwright:1'] === 0 && stored.hist.length === 0, JSON.stringify(stored.done));
+  await ctx.close();
+  fs.unlinkSync(backupPath);
   await browser.close();
 
   let failed = 0;

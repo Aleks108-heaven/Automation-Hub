@@ -1,7 +1,7 @@
 // Usage: node tools/build-question-bank.js  — rewrites 4-research-and-sources/question-bank.md from the English sources
 const fs=require('fs'),vm=require('vm'),d='1-learning-hub/source/';
 const ctx={console,location:{search:''},localStorage:{getItem:()=>null},URLSearchParams};vm.createContext(ctx);
-for(const f of ['data.js','data2.js','data3.js','data4.js','data5.js'])vm.runInContext(fs.readFileSync(d+f,'utf8'),ctx);
+for(const f of ['data.js','data2.js','data3.js','data4.js','data5.js','data6.js'])vm.runInContext(fs.readFileSync(d+f,'utf8'),ctx);
 const {MODULES,TRACKS,EXAM_BANK}=vm.runInContext('({MODULES,TRACKS,EXAM_BANK})',ctx);
 const L=i=>String.fromCharCode(65+i),ans=a=>Array.isArray(a)?a.map(L).join(', '):L(a);
 const q=(n,x,k)=>`**${n}. ${x.q}**${Array.isArray(x.a)?' (select TWO)':''}${k?` · K${x.k}`:''}\n\n${x.o.map((o,i)=>`- ${L(i)}. ${o}`).join('\n')}\n\n*Answer: ${ans(x.a)}* — ${x.why}\n`;
